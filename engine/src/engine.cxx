@@ -1,9 +1,12 @@
+#define GLFW_INCLUDE_NONE
+
+#include <filesystem>
+#include <fstream>
 #include <fxng/engine.hxx>
 #include <fxng/log.hxx>
 #include <GL/glew.h>
-
-#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <yaml-cpp/yaml.h>
 
 static void glfw_error_callback(int error_code, const char *description)
 {
@@ -51,7 +54,7 @@ static GLFWwindow *create_window(
         share);
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(GLFW_TRUE);
+    glfwSwapInterval(GLFW_FALSE);
 
     if (config.Main)
     {
@@ -102,6 +105,8 @@ static constexpr std::array colors
 
 fxng::Engine::Engine(const EngineConfig &config)
 {
+    IndexAssets();
+
     glfwSetErrorCallback(glfw_error_callback);
 
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
@@ -142,6 +147,7 @@ fxng::Engine::Engine(const EngineConfig &config)
 
         auto index = 0u;
         auto active = false;
+
         for (const auto window : m_Windows)
         {
             const auto color_index = index++ % colors.size();
@@ -169,7 +175,6 @@ fxng::Engine::Engine(const EngineConfig &config)
 
             Frame();
 
-            glfwSwapInterval(0);
             glfwSwapBuffers(window);
         }
 
@@ -187,6 +192,159 @@ fxng::Engine::~Engine()
     glfwSetErrorCallback(nullptr);
 }
 
+fxng::Scene &fxng::Engine::GetScene()
+{
+    return m_Scene;
+}
+
+void fxng::Engine::InitScene()
+{
+    m_Scene.OnInit();
+}
+
+void fxng::Engine::ExitScene()
+{
+    m_Scene.OnExit();
+}
+
+void fxng::Engine::ClearScene()
+{
+    m_Scene.Clear();
+}
+
+void fxng::Engine::IndexAssets()
+{
+#ifdef FXNG_PACKAGE
+
+    Fatal("TODO");
+
+#else
+
+    IndexYaml("engine/assets");
+    IndexYaml("game/assets");
+
+#endif
+}
+
+void fxng::Engine::IndexYaml(std::filesystem::path path)
+{
+    if (is_directory(path))
+        path = path / "index.yaml";
+
+    std::ifstream stream(path);
+    Assert(stream.is_open(), "failed to open {}", path);
+
+    auto root = YAML::Load(stream);
+    auto type = root["type"].as<std::string>();
+
+    if (type == "index")
+    {
+        for (auto index = root["index"].as<std::vector<std::string>>(); auto &filename : index)
+        {
+            auto subpath = path.parent_path() / filename;
+            if (is_directory(subpath))
+                subpath = subpath / "index.yaml";
+            IndexYaml(subpath);
+        }
+        return;
+    }
+
+    if (type == "shader")
+    {
+        auto id = root["id"].as<std::string>();
+        auto name = root["name"].as<std::string>();
+        auto source = root["source"].as<std::string>();
+
+        Log(LogLevel_Info, "index shader id={} name={} source={}", id, name, source);
+
+        for (auto node : root["input"])
+        {
+            auto input_name = node["name"].as<std::string>();
+            auto input_type = node["type"].as<std::string>();
+            auto input_reference = node["reference"].as<std::optional<std::string>>();
+
+            Log(LogLevel_Info, "  input name={} type={} reference={}", input_name, input_type, input_reference);
+        }
+
+        for (auto node : root["output"])
+        {
+            auto output_name = node["name"].as<std::string>();
+            auto output_type = node["type"].as<std::string>();
+            auto output_reference = node["reference"].as<std::optional<std::string>>();
+
+            Log(LogLevel_Info, "  output name={} type={} reference={}", output_name, output_type, output_reference);
+        }
+
+        for (auto node : root["uniform"])
+        {
+            auto uniform_name = node["name"].as<std::string>();
+            auto uniform_type = node["type"].as<std::string>();
+            auto uniform_reference = node["reference"].as<std::optional<std::string>>();
+
+            Log(LogLevel_Info, "  uniform name={} type={} reference={}", uniform_name, uniform_type, uniform_reference);
+        }
+
+        return;
+    }
+
+    if (type == "material")
+    {
+        auto id = root["id"].as<std::string>();
+        auto name = root["name"].as<std::string>();
+        auto stages = root["stages"].as<std::map<std::string, std::string>>();
+
+        Log(LogLevel_Info, "index material id={} name={}", id, name);
+
+        for (auto stage : stages)
+        {
+            Log(LogLevel_Info, "  stage key={} value={}", stage.first, stage.second);
+        }
+
+        return;
+    }
+
+    if (type == "mesh")
+    {
+        auto id = root["id"].as<std::string>();
+        auto name = root["name"].as<std::string>();
+        auto source = root["source"].as<std::string>();
+
+        Log(LogLevel_Info, "index mesh id={} name={} source={}", id, name, source);
+
+        return;
+    }
+
+    if (type == "scene")
+    {
+        auto id = root["id"].as<std::string>();
+        auto name = root["name"].as<std::string>();
+
+        Log(LogLevel_Info, "index scene id={} name={}", id, name);
+
+        for (auto node : root["entities"])
+        {
+            auto entity_id = node["id"].as<std::string>();
+            auto entity_name = node["name"].as<std::string>();
+
+            Log(LogLevel_Info, "  entity id={} name={}", entity_id, entity_name);
+
+            for (auto component_node : node["components"])
+            {
+                auto component_type = component_node["type"].as<std::string>();
+
+                Log(LogLevel_Info, "    component type={}", component_type);
+            }
+        }
+
+        return;
+    }
+
+    Log(LogLevel_Error, "invalid yaml file type {}", type);
+}
+
 void fxng::Engine::Frame()
 {
+    m_Scene.PreFrame();
+    m_Scene.OnFrame();
+    m_Scene.PostFrame();
 }

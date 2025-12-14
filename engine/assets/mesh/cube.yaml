@@ -1,0 +1,4 @@
+id: fxng:cube
+type: mesh
+name: Unit Cube Mesh
+source: source/cube.obj

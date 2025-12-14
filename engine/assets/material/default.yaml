@@ -1,0 +1,6 @@
+id: fxng:default
+type: material
+name: Default Material
+stages:
+  vertex: fxng:default.vertex
+  fragment: fxng:default.fragment

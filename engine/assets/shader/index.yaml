@@ -1,0 +1,4 @@
+type: index
+index:
+  - default.fragment.yaml
+  - default.vertex.yaml

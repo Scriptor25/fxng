@@ -6,3 +6,9 @@
 	path = deps/glew
 	url = https://github.com/Perlmint/glew-cmake.git
 	branch = master
+[submodule "glm"]
+	path = deps/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "yaml"]
+	path = deps/yaml
+	url = https://github.com/jbeder/yaml-cpp.git

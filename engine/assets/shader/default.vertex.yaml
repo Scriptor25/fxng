@@ -1,0 +1,36 @@
+id: fxng:default.vertex
+type: shader
+name: Default Vertex Shader
+source: source/default.vertex.glsl
+input:
+  - name: POSITION
+    type: float4
+    reference: vertex.position
+  - name: NORMAL
+    type: float3
+    reference: vertex.normal
+  - name: TEX
+    type: float2
+    reference: vertex.texture
+output:
+  - name: position
+    type: float4
+  - name: normal
+    type: float3
+  - name: tex
+    type: float2
+  - name: world_position
+    type: float4
+uniform:
+  - name: MODEL
+    type: float4x4
+    reference: model.matrix
+  - name: INVMODEL
+    type: float4x4
+    reference: model.inverse
+  - name: VIEW
+    type: float4x4
+    reference: view.matrix
+  - name: PROJECTION
+    type: float4x4
+    reference: projection.matrix

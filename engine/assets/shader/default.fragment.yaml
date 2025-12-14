@@ -1,0 +1,32 @@
+id: fxng:default.fragment
+type: shader
+name: Default Fragment Shader
+source: source/default.fragment.glsl
+input:
+  - name: POSITION
+    type: float4
+  - name: NORMAL
+    type: float3
+  - name: TEX
+    type: float2
+  - name: WORLD_POSITION
+    type: float4
+output:
+  - name: color
+    type: float4
+uniform:
+  - name: AMBIENT
+    type: float3
+  - name: DIFFUSE
+    type: float3
+  - name: SPECULAR
+    type: float3
+  - name: SHININESS
+    type: float1
+  - name: CAMERA.Position
+    type: float3
+    reference: camera.position
+buffer:
+  - name: LIGHT_SOURCE_BUFFER
+    type: storage
+    reference: scene.lights

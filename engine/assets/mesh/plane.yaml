@@ -1,0 +1,4 @@
+id: fxng:plane
+type: mesh
+name: Unit Plane Mesh
+source: source/plane.obj
