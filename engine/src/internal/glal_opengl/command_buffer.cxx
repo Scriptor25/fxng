@@ -104,7 +104,7 @@ void fxng::glal::opengl::CommandBuffer::EndRenderPass()
     glDeleteFramebuffers(1, &m_Framebuffer);
 }
 
-void fxng::glal::opengl::CommandBuffer::SetPipeline(const glal::Pipeline *pipeline)
+void fxng::glal::opengl::CommandBuffer::BindPipeline(const glal::Pipeline *pipeline)
 {
     const auto pipeline_impl = dynamic_cast<const Pipeline *>(pipeline);
     glUseProgram(pipeline_impl->GetHandle());
@@ -149,30 +149,12 @@ void fxng::glal::opengl::CommandBuffer::BindIndexBuffer(const glal::Buffer *buff
     m_IndexType = type;
 }
 
-void fxng::glal::opengl::CommandBuffer::BindBuffer(
-    const std::uint32_t slot,
-    const ShaderStage stages,
-    const glal::Buffer *buffer)
+void fxng::glal::opengl::CommandBuffer::BindDescriptorSet(
+    const std::uint32_t index,
+    const glal::DescriptorSet *descriptor_set)
 {
-    (void) stages; // opengl binds to all stages
-
-    const auto buffer_impl = dynamic_cast<const Buffer *>(buffer);
-    glBindBufferBase(GL_UNIFORM_BUFFER, slot, buffer_impl->GetHandle());
-}
-
-void fxng::glal::opengl::CommandBuffer::BindImageView(
-    const std::uint32_t slot,
-    const ShaderStage stages,
-    const glal::ImageView *image_view,
-    const glal::Sampler *sampler)
-{
-    (void) stages; // opengl binds to all stages
-
-    const auto image_view_impl = dynamic_cast<const ImageView *>(image_view);
-    const auto sampler_impl = dynamic_cast<const Sampler *>(sampler);
-
-    glBindTextureUnit(slot, image_view_impl->GetHandle());
-    glBindSampler(slot, sampler_impl->GetHandle());
+    const auto set_impl = dynamic_cast<const DescriptorSet *>(descriptor_set);
+    set_impl->Bind(index);
 }
 
 void fxng::glal::opengl::CommandBuffer::Draw(const std::uint32_t vertex_count, const std::uint32_t first_vertex)
@@ -218,8 +200,8 @@ void fxng::glal::opengl::CommandBuffer::CopyBuffer(
     const std::size_t dst_offset,
     const std::size_t size)
 {
-    Assert(src_buffer, "missing source buffer");
-    Assert(dst_buffer, "missing destination buffer");
+    Assert(src_buffer, "missing src buffer");
+    Assert(dst_buffer, "missing dst buffer");
 
     const auto src_buffer_impl = dynamic_cast<const Buffer *>(src_buffer);
     const auto dst_buffer_impl = dynamic_cast<const Buffer *>(dst_buffer);
@@ -241,18 +223,48 @@ void fxng::glal::opengl::CommandBuffer::CopyBufferToImage(const glal::Buffer *sr
     TranslateImageFormat(dst_image_impl->GetFormat(), nullptr, &format, &type);
 
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, src_buffer_impl->GetHandle());
-    glTextureSubImage3D(
-        dst_image_impl->GetHandle(),
-        0,
-        0,
-        0,
-        0,
-        dst_image_impl->GetExtent().Width,
-        dst_image_impl->GetExtent().Height,
-        dst_image_impl->GetExtent().Depth,
-        format,
-        type,
-        nullptr);
+    switch (dst_image_impl->GetDimension())
+    {
+    case ImageDimension_1D:
+        glTextureSubImage1D(
+            dst_image_impl->GetHandle(),
+            0,
+            0,
+            dst_image_impl->GetExtent().Width,
+            format,
+            type,
+            nullptr);
+        break;
+    case ImageDimension_2D:
+        glTextureSubImage2D(
+            dst_image_impl->GetHandle(),
+            0,
+            0,
+            0,
+            dst_image_impl->GetExtent().Width,
+            dst_image_impl->GetExtent().Height,
+            format,
+            type,
+            nullptr);
+        break;
+    case ImageDimension_3D:
+        glTextureSubImage3D(
+            dst_image_impl->GetHandle(),
+            0,
+            0,
+            0,
+            0,
+            dst_image_impl->GetExtent().Width,
+            dst_image_impl->GetExtent().Height,
+            dst_image_impl->GetExtent().Depth,
+            format,
+            type,
+            nullptr);
+        break;
+    default:
+        Fatal("image dimension not supported");
+        break;
+    }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 }
 

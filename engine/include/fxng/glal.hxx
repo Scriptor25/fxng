@@ -10,6 +10,8 @@
  */
 namespace fxng::glal
 {
+    /* classes */
+
     class Instance;
     class PhysicalDevice;
     class Device;
@@ -24,8 +26,15 @@ namespace fxng::glal
     class Sampler;
     class Swapchain;
 
-    class ShaderModule;
+    class DescriptorSetLayout;
+    class DescriptorSet;
+
+    class PipelineLayout;
     class Pipeline;
+
+    class ShaderModule;
+
+    /* enums */
 
     enum DeviceFeature
     {
@@ -57,21 +66,21 @@ namespace fxng::glal
         CommandBufferUsage_Reusable,
     };
 
-    enum ShaderStage
+    enum ShaderStage : std::uint32_t
     {
-        ShaderStage_None,
+        ShaderStage_None = 0,
 
-        ShaderStage_Vertex,
-        ShaderStage_Geometry,
-        ShaderStage_TessellationControl,
-        ShaderStage_TessellationEvaluation,
-        ShaderStage_Fragment,
+        ShaderStage_Vertex                 = 1 << 0,
+        ShaderStage_Geometry               = 1 << 1,
+        ShaderStage_TessellationControl    = 1 << 2,
+        ShaderStage_TessellationEvaluation = 1 << 3,
+        ShaderStage_Fragment               = 1 << 4,
 
-        ShaderStage_Compute,
+        ShaderStage_Compute = 1 << 5,
 
-        ShaderStage_RayGeneration,
-        ShaderStage_RayHit,
-        ShaderStage_RayMiss,
+        ShaderStage_RayGeneration = 1 << 6,
+        ShaderStage_RayHit        = 1 << 7,
+        ShaderStage_RayMiss       = 1 << 8,
     };
 
     enum PipelineType
@@ -85,9 +94,10 @@ namespace fxng::glal
     enum BufferUsage
     {
         BufferUsage_None,
-        BufferUsage_VertexBuffer,
-        BufferUsage_IndexBuffer,
-        BufferUsage_StorageBuffer,
+        BufferUsage_Vertex,
+        BufferUsage_Index,
+        BufferUsage_Uniform,
+        BufferUsage_Storage,
     };
 
     enum MemoryUsage
@@ -167,6 +177,20 @@ namespace fxng::glal
         AddressMode_Mirror,
     };
 
+    enum DescriptorType
+    {
+        DescriptorType_UniformBuffer,
+        DescriptorType_StorageBuffer,
+        DescriptorType_ReadOnlyStorageBuffer,
+        DescriptorType_CombinedImageSampler,
+        DescriptorType_SampledImage,
+        DescriptorType_StorageImage,
+        DescriptorType_Sampler,
+        DescriptorType_PushConstant,
+    };
+
+    /* common structs */
+
     /**
      * Extent 2D - width and height
      */
@@ -195,6 +219,30 @@ namespace fxng::glal
         std::uint32_t MaxUniformBuffers;
         std::uint64_t MaxBufferSize;
     };
+
+    /**
+     * Clear Value
+     */
+    union ClearValue
+    {
+        float Color[4];
+        float Depth;
+        int Stencil;
+    };
+
+    /**
+     * Descriptor Binding
+     */
+    struct DescriptorBinding
+    {
+        std::uint32_t Binding;
+        std::uint32_t Location;
+        DescriptorType Type;
+        std::uint32_t Count;
+        ShaderStage Stages;
+    };
+
+    /* descriptor structs */
 
     /**
      * Instance Descriptor
@@ -246,7 +294,7 @@ namespace fxng::glal
     {
         ShaderStage Stage;
         const void *Code;
-        size_t Size;
+        std::size_t Size;
     };
 
     /**
@@ -283,6 +331,8 @@ namespace fxng::glal
         const VertexAttributeDesc *VertexAttributes;
         std::uint32_t VertexAttributeCount;
 
+        PipelineLayout *Layout;
+
         bool DepthTest;
         bool DepthWrite;
         bool BlendEnable;
@@ -298,13 +348,6 @@ namespace fxng::glal
         Extent2D Extent;
         ImageFormat Format;
         std::uint32_t ImageCount;
-    };
-
-    union ClearValue
-    {
-        float Color[4];
-        float Depth;
-        int Stencil;
     };
 
     /**
@@ -332,6 +375,39 @@ namespace fxng::glal
         const RenderTargetDesc *Stencil;
         std::uint32_t StencilCount;
     };
+
+    /**
+     * Descriptor Set Layout Descriptor
+     */
+    struct DescriptorSetLayoutDesc
+    {
+        std::uint32_t Set;
+
+        const DescriptorBinding *DescriptorBindings;
+        std::uint32_t DescriptorBindingCount;
+    };
+
+    /**
+     * Descriptor Set Descriptor
+     */
+    struct DescriptorSetDesc
+    {
+        DescriptorSetLayout *const*DescriptorSetLayouts;
+        std::uint32_t DescriptorSetLayoutCount;
+    };
+
+    /**
+     * Pipeline Layout Descriptor
+     */
+    struct PipelineLayoutDesc
+    {
+        DescriptorSetLayout *const*DescriptorSetLayouts;
+        std::uint32_t DescriptorSetLayoutCount;
+
+        // TODO: push constant ranges
+    };
+
+    /* class definitions */
 
     class Instance
     {
@@ -370,8 +446,17 @@ namespace fxng::glal
         virtual ShaderModule *CreateShaderModule(const ShaderModuleDesc &desc) = 0;
         virtual void DestroyShaderModule(ShaderModule *shader_module) = 0;
 
+        virtual PipelineLayout *CreatePipelineLayout(const PipelineLayoutDesc &desc) = 0;
+        virtual void DestroyPipelineLayout(PipelineLayout *pipeline_layout) = 0;
+
         virtual Pipeline *CreatePipeline(const PipelineDesc &desc) = 0;
         virtual void DestroyPipeline(Pipeline *pipeline) = 0;
+
+        virtual DescriptorSetLayout *CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc) = 0;
+        virtual void DestroyDescriptorSetLayout(DescriptorSetLayout *descriptor_set_layout) = 0;
+
+        virtual DescriptorSet *CreateDescriptorSet(const DescriptorSetDesc &desc) = 0;
+        virtual void DestroyDescriptorSet(DescriptorSet *descriptor_set) = 0;
 
         virtual Swapchain *CreateSwapchain(const SwapchainDesc &desc) = 0;
         virtual void DestroySwapchain(Swapchain *swapchain) = 0;
@@ -401,12 +486,13 @@ namespace fxng::glal
         virtual void Present(const Swapchain *swapchain) = 0;
     };
 
-    class ShaderModule
+    class PipelineLayout
     {
     public:
-        virtual ~ShaderModule() = default;
+        virtual ~PipelineLayout() = default;
 
-        [[nodiscard]] virtual ShaderStage GetStage() const = 0;
+        [[nodiscard]] virtual DescriptorSetLayout *GetDescriptorSetLayout(std::uint32_t index) const = 0;
+        [[nodiscard]] virtual std::uint32_t GetDescriptorSetLayoutCount() const = 0;
     };
 
     class Pipeline
@@ -415,6 +501,14 @@ namespace fxng::glal
         virtual ~Pipeline() = default;
 
         [[nodiscard]] virtual PipelineType GetType() const = 0;
+    };
+
+    class ShaderModule
+    {
+    public:
+        virtual ~ShaderModule() = default;
+
+        [[nodiscard]] virtual ShaderStage GetStage() const = 0;
     };
 
     class Resource
@@ -437,8 +531,10 @@ namespace fxng::glal
     {
     public:
         [[nodiscard]] virtual ImageFormat GetFormat() const = 0;
+        [[nodiscard]] virtual ImageDimension GetDimension() const = 0;
         [[nodiscard]] virtual Extent3D GetExtent() const = 0;
-        [[nodiscard]] virtual std::uint32_t GetMipLevels() const = 0;
+        [[nodiscard]] virtual std::uint32_t GetMipLevelCount() const = 0;
+        [[nodiscard]] virtual std::uint32_t GetArrayLayerCount() const = 0;
     };
 
     class ImageView
@@ -468,6 +564,37 @@ namespace fxng::glal
         virtual void Present() const = 0;
     };
 
+    class DescriptorSetLayout
+    {
+    public:
+        virtual ~DescriptorSetLayout() = default;
+
+        [[nodiscard]] virtual std::uint32_t GetSet() const = 0;
+        [[nodiscard]] virtual std::uint32_t GetDescriptorBindingCount() const = 0;
+        [[nodiscard]] virtual const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const = 0;
+    };
+
+    class DescriptorSet
+    {
+    public:
+        virtual ~DescriptorSet() = default;
+
+        virtual void BindBuffer(
+            std::uint32_t binding,
+            const Buffer *buffer) = 0;
+
+        virtual void BindBuffer(
+            std::uint32_t binding,
+            const Buffer *buffer,
+            std::uint32_t offset,
+            std::uint32_t size) = 0;
+
+        virtual void BindImageView(
+            std::uint32_t binding,
+            const ImageView *image_view,
+            const Sampler *sampler) = 0;
+    };
+
     class CommandBuffer
     {
     public:
@@ -479,23 +606,13 @@ namespace fxng::glal
         virtual void BeginRenderPass(const RenderPassDesc &desc) = 0;
         virtual void EndRenderPass() = 0;
 
-        virtual void SetPipeline(const Pipeline *pipeline) = 0;
-
         virtual void SetViewport(float x, float y, float w, float h) = 0;
         virtual void SetScissor(int x, int y, int w, int h) = 0;
 
+        virtual void BindPipeline(const Pipeline *pipeline) = 0;
         virtual void BindVertexBuffer(const Buffer *buffer, std::size_t offset) = 0;
         virtual void BindIndexBuffer(const Buffer *buffer, DataType type) = 0;
-
-        virtual void BindBuffer(
-            std::uint32_t slot,
-            ShaderStage stages,
-            const Buffer *buffer) = 0;
-        virtual void BindImageView(
-            std::uint32_t slot,
-            ShaderStage stages,
-            const ImageView *image_view,
-            const Sampler *sampler) = 0;
+        virtual void BindDescriptorSet(std::uint32_t index, const DescriptorSet *descriptor_set) = 0;
 
         virtual void Draw(std::uint32_t vertex_count, std::uint32_t first_vertex) = 0;
         virtual void DrawIndexed(std::uint32_t index_count, std::uint32_t first_index) = 0;

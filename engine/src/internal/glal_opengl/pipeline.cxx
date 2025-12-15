@@ -4,6 +4,7 @@
 
 fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
     : m_Device(device),
+      m_Layout(dynamic_cast<PipelineLayout *>(desc.Layout)),
       m_Type(desc.Type),
       m_VertexAttributes(desc.VertexAttributeCount),
       m_VertexStride()
@@ -62,7 +63,19 @@ fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
         Fatal("failed to validate program: {}", message);
     }
 
-    glUniformBlockBinding(m_Handle, 0, 0);
+    glUseProgram(m_Handle);
+    for (const auto set_layout : *m_Layout)
+        for (auto &block : *set_layout)
+            switch (block.Type)
+            {
+            case DescriptorType_UniformBuffer:
+                glUniformBlockBinding(m_Handle, block.Location, block.Binding);
+                break;
+            default:
+                glShaderStorageBlockBinding(m_Handle, block.Location, block.Binding);
+                break;
+            }
+    glUseProgram(0);
 }
 
 fxng::glal::opengl::Pipeline::~Pipeline()

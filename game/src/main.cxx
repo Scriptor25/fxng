@@ -121,18 +121,36 @@ int main()
             .ImageCount = 2,
         });
 
-    const auto vertex_buffer = device->CreateBuffer(
+    constexpr std::array descriptor_bindings
+    {
+        fxng::glal::DescriptorBinding
         {
-            .Size = sizeof(vertices),
-            .Usage = fxng::glal::BufferUsage_VertexBuffer,
-            .Memory = fxng::glal::MemoryUsage_HostToDevice,
+            .Binding = 0,
+            .Location = 0,
+            .Type = fxng::glal::DescriptorType_UniformBuffer,
+            .Count = 1,
+            .Stages = fxng::glal::ShaderStage_Vertex,
+        },
+    };
+
+    const auto descriptor_set_layout = device->CreateDescriptorSetLayout(
+        {
+            .Set = 0,
+            .DescriptorBindings = descriptor_bindings.data(),
+            .DescriptorBindingCount = descriptor_bindings.size(),
         });
 
-    {
-        const auto mapped = vertex_buffer->Map();
-        std::memcpy(mapped, vertices, sizeof(vertices));
-        vertex_buffer->Unmap();
-    }
+    const auto pipeline_layout = device->CreatePipelineLayout(
+        {
+            .DescriptorSetLayouts = &descriptor_set_layout,
+            .DescriptorSetLayoutCount = 1,
+        });
+
+    const auto descriptor_set = device->CreateDescriptorSet(
+        {
+            .DescriptorSetLayouts = &descriptor_set_layout,
+            .DescriptorSetLayoutCount = 1,
+        });
 
     const auto vertex_shader = load_shader_module(device, fxng::glal::ShaderStage_Vertex, "vertex.spv");
     const auto fragment_shader = load_shader_module(device, fxng::glal::ShaderStage_Fragment, "fragment.spv");
@@ -178,6 +196,7 @@ int main()
             .StageCount = pipeline_stages.size(),
             .VertexAttributes = vertex_attributes.data(),
             .VertexAttributeCount = vertex_attributes.size(),
+            .Layout = pipeline_layout,
             .DepthTest = false,
             .DepthWrite = false,
             .BlendEnable = false,
@@ -186,16 +205,29 @@ int main()
     const auto uniform_buffer = device->CreateBuffer(
         {
             .Size = sizeof(UniformBufferObject),
-            .Usage = fxng::glal::BufferUsage_StorageBuffer,
+            .Usage = fxng::glal::BufferUsage_Storage,
             .Memory = fxng::glal::MemoryUsage_HostToDevice,
         });
 
-    const auto command_buffer = device->CreateCommandBuffer(fxng::glal::CommandBufferUsage_Reusable);
+    descriptor_set->BindBuffer(0, uniform_buffer);
 
+    const auto vertex_buffer = device->CreateBuffer(
+        {
+            .Size = sizeof(vertices),
+            .Usage = fxng::glal::BufferUsage_Vertex,
+            .Memory = fxng::glal::MemoryUsage_HostToDevice,
+        });
+
+    {
+        const auto mapped = vertex_buffer->Map();
+        std::memcpy(mapped, vertices, sizeof(vertices));
+        vertex_buffer->Unmap();
+    }
+
+    const auto command_buffer = device->CreateCommandBuffer(fxng::glal::CommandBufferUsage_Reusable);
     const auto fence = device->CreateFence();
 
     const auto start_time = std::chrono::high_resolution_clock::now();
-
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -241,12 +273,9 @@ int main()
         };
 
         command_buffer->Begin();
-
         command_buffer->Transition(image_view->GetImage(), fxng::glal::ResourceState_RenderTarget);
 
         command_buffer->BeginRenderPass(render_pass);
-
-        command_buffer->SetPipeline(pipeline);
         command_buffer->SetViewport(
             0.0f,
             0.0f,
@@ -257,16 +286,13 @@ int main()
             0,
             swapchain->GetExtent().Width,
             swapchain->GetExtent().Height);
-
-        command_buffer->BindBuffer(0, fxng::glal::ShaderStage_Vertex, uniform_buffer);
-
+        command_buffer->BindPipeline(pipeline);
+        command_buffer->BindDescriptorSet(0, descriptor_set);
         command_buffer->BindVertexBuffer(vertex_buffer, 0);
         command_buffer->Draw(3, 0);
-
         command_buffer->EndRenderPass();
 
         command_buffer->Transition(image_view->GetImage(), fxng::glal::ResourceState_Present);
-
         command_buffer->End();
 
         graphics_queue->Submit(command_buffer, 1, fence);
@@ -278,16 +304,16 @@ int main()
     glfwDestroyWindow(window);
     glfwTerminate();
 
-    /*fxng::Engine engine(
-        {
-            .Application = {
-                .Name = "Game",
-                .Vendor = "Default",
-                .Version = 0,
-            },
-            .Windows = {
-                { .Main = true },
-            },
-            .InitialScene = "entry",
-        });*/
+    // fxng::Engine engine(
+    //     {
+    //         .Application = {
+    //             .Name = "Game",
+    //             .Vendor = "Default",
+    //             .Version = 0,
+    //         },
+    //         .Windows = {
+    //             { .Main = true },
+    //         },
+    //         .InitialScene = "entry",
+    //     });
 }

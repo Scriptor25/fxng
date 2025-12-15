@@ -10,8 +10,12 @@ namespace fxng::glal::opengl
     class PhysicalDevice;
     class Device;
     class Queue;
-    class CommandBuffer;
-    class Fence;
+
+    class DescriptorSetLayout;
+    class DescriptorSet;
+
+    class PipelineLayout;
+    class Pipeline;
 
     class Buffer;
     class Image;
@@ -20,7 +24,8 @@ namespace fxng::glal::opengl
     class Swapchain;
 
     class ShaderModule;
-    class Pipeline;
+    class CommandBuffer;
+    class Fence;
 
     class Instance final : public glal::Instance
     {
@@ -77,8 +82,17 @@ namespace fxng::glal::opengl
         glal::ShaderModule *CreateShaderModule(const ShaderModuleDesc &desc) override;
         void DestroyShaderModule(glal::ShaderModule *shader_module) override;
 
+        glal::PipelineLayout *CreatePipelineLayout(const PipelineLayoutDesc &desc) override;
+        void DestroyPipelineLayout(glal::PipelineLayout *pipeline_layout) override;
+
         glal::Pipeline *CreatePipeline(const PipelineDesc &desc) override;
         void DestroyPipeline(glal::Pipeline *pipeline) override;
+
+        glal::DescriptorSetLayout *CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc) override;
+        void DestroyDescriptorSetLayout(glal::DescriptorSetLayout *descriptor_set_layout) override;
+
+        glal::DescriptorSet *CreateDescriptorSet(const DescriptorSetDesc &desc) override;
+        void DestroyDescriptorSet(glal::DescriptorSet *descriptor_set) override;
 
         glal::Swapchain *CreateSwapchain(const SwapchainDesc &desc) override;
         void DestroySwapchain(glal::Swapchain *swapchain) override;
@@ -104,7 +118,10 @@ namespace fxng::glal::opengl
         std::vector<Image *> m_Images;
         std::vector<Sampler *> m_Samplers;
         std::vector<ShaderModule *> m_ShaderModules;
+        std::vector<PipelineLayout *> m_PipelineLayouts;
         std::vector<Pipeline *> m_Pipelines;
+        std::vector<DescriptorSetLayout *> m_DescriptorSetLayouts;
+        std::vector<DescriptorSet *> m_DescriptorSets;
         std::vector<Swapchain *> m_Swapchains;
         std::vector<CommandBuffer *> m_CommandBuffers;
         std::vector<Fence *> m_Fences;
@@ -130,6 +147,79 @@ namespace fxng::glal::opengl
         Device *m_Device;
     };
 
+    class DescriptorSetLayout final : public glal::DescriptorSetLayout
+    {
+        friend Device;
+        friend Pipeline;
+        friend DescriptorSet;
+
+    public:
+        [[nodiscard]] std::uint32_t GetSet() const override;
+        [[nodiscard]] std::uint32_t GetDescriptorBindingCount() const override;
+        [[nodiscard]] const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const override;
+
+    protected:
+        explicit DescriptorSetLayout(Device *device, const DescriptorSetLayoutDesc &desc);
+
+        [[nodiscard]] std::vector<DescriptorBinding>::const_iterator begin() const;
+        [[nodiscard]] std::vector<DescriptorBinding>::const_iterator end() const;
+
+    private:
+        Device *m_Device;
+
+        std::uint32_t m_Set;
+        std::vector<DescriptorBinding> m_DescriptorBindings;
+    };
+
+    struct BufferBinding
+    {
+        GLenum Target;
+        const Buffer *BufferImpl;
+        bool Base;
+        GLsizeiptr Offset;
+        GLintptr Size;
+    };
+
+    struct ImageBinding
+    {
+        const ImageView *ImageViewImpl;
+        const Sampler *SamplerImpl;
+    };
+
+    class DescriptorSet final : public glal::DescriptorSet
+    {
+        friend Device;
+        friend CommandBuffer;
+
+    public:
+        void BindBuffer(
+            std::uint32_t binding,
+            const glal::Buffer *buffer) override;
+
+        void BindBuffer(
+            std::uint32_t binding,
+            const glal::Buffer *buffer,
+            std::uint32_t offset,
+            std::uint32_t size) override;
+
+        void BindImageView(
+            std::uint32_t binding,
+            const glal::ImageView *image_view,
+            const glal::Sampler *sampler) override;
+
+    protected:
+        explicit DescriptorSet(Device *device, const DescriptorSetDesc &desc);
+
+        void Bind(std::uint32_t index) const;
+
+    private:
+        Device *m_Device;
+        std::vector<DescriptorSetLayout *> m_Layouts;
+
+        std::unordered_map<GLuint, BufferBinding> m_BufferBindings;
+        std::unordered_map<GLuint, ImageBinding> m_ImageBindings;
+    };
+
     class CommandBuffer final : public glal::CommandBuffer
     {
         friend Device;
@@ -141,23 +231,13 @@ namespace fxng::glal::opengl
         void BeginRenderPass(const RenderPassDesc &desc) override;
         void EndRenderPass() override;
 
-        void SetPipeline(const glal::Pipeline *pipeline) override;
-
         void SetViewport(float x, float y, float w, float h) override;
         void SetScissor(int x, int y, int w, int h) override;
 
+        void BindPipeline(const glal::Pipeline *pipeline) override;
         void BindVertexBuffer(const glal::Buffer *buffer, std::size_t offset) override;
         void BindIndexBuffer(const glal::Buffer *buffer, DataType type) override;
-
-        void BindBuffer(
-            std::uint32_t slot,
-            ShaderStage stages,
-            const glal::Buffer *buffer) override;
-        void BindImageView(
-            std::uint32_t slot,
-            ShaderStage stages,
-            const glal::ImageView *image_view,
-            const glal::Sampler *sampler) override;
+        void BindDescriptorSet(std::uint32_t index, const glal::DescriptorSet *descriptor_set) override;
 
         void Draw(std::uint32_t vertex_count, std::uint32_t first_vertex) override;
         void DrawIndexed(std::uint32_t index_count, std::uint32_t first_index) override;
@@ -209,6 +289,7 @@ namespace fxng::glal::opengl
     {
         friend Device;
         friend CommandBuffer;
+        friend DescriptorSet;
 
     public:
         ~Buffer() override;
@@ -245,8 +326,10 @@ namespace fxng::glal::opengl
         ~Image() override;
 
         [[nodiscard]] ImageFormat GetFormat() const override;
+        [[nodiscard]] ImageDimension GetDimension() const override;
         [[nodiscard]] Extent3D GetExtent() const override;
-        [[nodiscard]] std::uint32_t GetMipLevels() const override;
+        [[nodiscard]] std::uint32_t GetMipLevelCount() const override;
+        [[nodiscard]] std::uint32_t GetArrayLayerCount() const override;
 
     protected:
         explicit Image(Device *device, const ImageDesc &desc);
@@ -257,8 +340,10 @@ namespace fxng::glal::opengl
         Device *m_Device;
 
         ImageFormat m_Format;
+        ImageDimension m_Dimension;
         Extent3D m_Extent;
-        std::uint32_t m_MipLevels;
+        std::uint32_t m_MipLevelCount;
+        std::uint32_t m_ArrayLayerCount;
 
         std::uint32_t m_Handle;
     };
@@ -267,6 +352,7 @@ namespace fxng::glal::opengl
     {
         friend CommandBuffer;
         friend Swapchain;
+        friend DescriptorSet;
 
     public:
         [[nodiscard]] const glal::Image *GetImage() const override;
@@ -284,6 +370,7 @@ namespace fxng::glal::opengl
     {
         friend Device;
         friend CommandBuffer;
+        friend DescriptorSet;
 
     public:
         ~Sampler() override;
@@ -352,6 +439,27 @@ namespace fxng::glal::opengl
         std::uint32_t m_Handle;
     };
 
+    class PipelineLayout final : public glal::PipelineLayout
+    {
+        friend Device;
+        friend Pipeline;
+
+    public:
+        [[nodiscard]] glal::DescriptorSetLayout *GetDescriptorSetLayout(std::uint32_t index) const override;
+        [[nodiscard]] std::uint32_t GetDescriptorSetLayoutCount() const override;
+
+    protected:
+        explicit PipelineLayout(Device *device, const PipelineLayoutDesc &desc);
+
+        [[nodiscard]] std::vector<DescriptorSetLayout *>::const_iterator begin() const;
+        [[nodiscard]] std::vector<DescriptorSetLayout *>::const_iterator end() const;
+
+    private:
+        Device *m_Device;
+
+        std::vector<DescriptorSetLayout *> m_DescriptorSetLayouts;
+    };
+
     class Pipeline final : public glal::Pipeline
     {
         friend Device;
@@ -372,6 +480,7 @@ namespace fxng::glal::opengl
 
     private:
         Device *m_Device;
+        PipelineLayout *m_Layout;
 
         PipelineType m_Type;
         std::vector<VertexAttributeDesc> m_VertexAttributes;

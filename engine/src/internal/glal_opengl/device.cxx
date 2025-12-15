@@ -92,6 +92,22 @@ void fxng::glal::opengl::Device::DestroyShaderModule(glal::ShaderModule *shader_
         }
 }
 
+fxng::glal::PipelineLayout *fxng::glal::opengl::Device::CreatePipelineLayout(const PipelineLayoutDesc &desc)
+{
+    return m_PipelineLayouts.emplace_back(new PipelineLayout(this, desc));
+}
+
+void fxng::glal::opengl::Device::DestroyPipelineLayout(glal::PipelineLayout *pipeline_layout)
+{
+    for (auto it = m_PipelineLayouts.begin(); it != m_PipelineLayouts.end(); ++it)
+        if (*it == pipeline_layout)
+        {
+            m_PipelineLayouts.erase(it);
+            delete pipeline_layout;
+            break;
+        }
+}
+
 fxng::glal::Pipeline *fxng::glal::opengl::Device::CreatePipeline(const PipelineDesc &desc)
 {
     return m_Pipelines.emplace_back(new Pipeline(this, desc));
@@ -104,6 +120,39 @@ void fxng::glal::opengl::Device::DestroyPipeline(glal::Pipeline *pipeline)
         {
             m_Pipelines.erase(it);
             delete pipeline;
+            break;
+        }
+}
+
+fxng::glal::DescriptorSetLayout *fxng::glal::opengl::Device::CreateDescriptorSetLayout(
+    const DescriptorSetLayoutDesc &desc)
+{
+    return m_DescriptorSetLayouts.emplace_back(new DescriptorSetLayout(this, desc));
+}
+
+void fxng::glal::opengl::Device::DestroyDescriptorSetLayout(glal::DescriptorSetLayout *descriptor_set_layout)
+{
+    for (auto it = m_DescriptorSetLayouts.begin(); it != m_DescriptorSetLayouts.end(); ++it)
+        if (*it == descriptor_set_layout)
+        {
+            m_DescriptorSetLayouts.erase(it);
+            delete descriptor_set_layout;
+            break;
+        }
+}
+
+fxng::glal::DescriptorSet *fxng::glal::opengl::Device::CreateDescriptorSet(const DescriptorSetDesc &desc)
+{
+    return m_DescriptorSets.emplace_back(new DescriptorSet(this, desc));
+}
+
+void fxng::glal::opengl::Device::DestroyDescriptorSet(glal::DescriptorSet *descriptor_set)
+{
+    for (auto it = m_DescriptorSets.begin(); it != m_DescriptorSets.end(); ++it)
+        if (*it == descriptor_set)
+        {
+            m_DescriptorSets.erase(it);
+            delete descriptor_set;
             break;
         }
 }
