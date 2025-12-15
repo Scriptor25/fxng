@@ -26,6 +26,17 @@ fxng::glal::Device *fxng::glal::opengl::PhysicalDevice::CreateDevice()
     return m_Devices.emplace_back(new Device(this));
 }
 
+void fxng::glal::opengl::PhysicalDevice::DestroyDevice(glal::Device *device)
+{
+    for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it)
+        if (*it == device)
+        {
+            m_Devices.erase(it);
+            delete device;
+            break;
+        }
+}
+
 bool fxng::glal::opengl::PhysicalDevice::Supports(const DeviceFeature feature) const
 {
     return feature == DeviceFeature_GeometryShader

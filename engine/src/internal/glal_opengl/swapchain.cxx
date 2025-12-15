@@ -7,21 +7,25 @@ fxng::glal::opengl::Swapchain::Swapchain(Device *device, const SwapchainDesc &de
     : m_Device(device),
       m_Extent(desc.Extent),
       m_ImageCount(desc.ImageCount),
+      m_ImageIndex(),
       m_Images(desc.ImageCount),
+      m_Fences(desc.ImageCount),
       m_ImageViews(desc.ImageCount),
       m_NativeWindowHandle(desc.NativeWindowHandle)
 {
     for (std::uint32_t i = 0; i < m_ImageCount; ++i)
     {
-        m_Images[i] = new Image(
-            device,
+        const auto image = device->CreateImage(
             {
                 .Format = desc.Format,
-                .Extent = { m_Extent.Width, m_Extent.Height, 1 },
-                .MipLevels = 1,
-                .ArrayLayers = 1,
+                .Dimension = ImageDimension_2D,
+                .Extent = { m_Extent.Width, m_Extent.Height, 0 },
+                .MipLevelCount = 1,
+                .ArrayLayerCount = 1,
             });
-        m_ImageViews[i] = new ImageView(m_Images[i]);
+        const auto image_impl = dynamic_cast<Image *>(image);
+        m_Images[i] = image_impl;
+        m_ImageViews[i] = new ImageView(image_impl);
     }
 }
 
@@ -29,8 +33,6 @@ fxng::glal::opengl::Swapchain::~Swapchain()
 {
     for (const auto image_view : m_ImageViews)
         delete image_view;
-    for (const auto image : m_Images)
-        delete image;
 }
 
 fxng::glal::Extent2D fxng::glal::opengl::Swapchain::GetExtent() const
@@ -50,10 +52,37 @@ fxng::glal::ImageView *fxng::glal::opengl::Swapchain::GetImageView(const std::ui
 
 std::uint32_t fxng::glal::opengl::Swapchain::AcquireNextImage(glal::Fence *fence)
 {
-    return 0;
+    const auto image_index = m_ImageIndex;
+    m_ImageIndex = (m_ImageIndex + 1) % m_ImageCount;
+
+    if (const auto in_flight = m_Fences.at(image_index))
+        in_flight->Wait();
+
+    m_Fences.at(image_index) = fence;
+    return image_index;
 }
 
 void fxng::glal::opengl::Swapchain::Present() const
 {
+    const auto image_view = m_ImageViews.at(m_ImageIndex);
+
+    GLuint framebuffer;
+    glCreateFramebuffers(1, &framebuffer);
+    glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, image_view->GetHandle(), 0);
+    glBlitNamedFramebuffer(
+        framebuffer,
+        0,
+        0,
+        0,
+        m_Extent.Width,
+        m_Extent.Height,
+        0,
+        0,
+        m_Extent.Width,
+        m_Extent.Height,
+        GL_COLOR_BUFFER_BIT,
+        GL_NEAREST);
+    glDeleteFramebuffers(1, &framebuffer);
+
     glfwSwapBuffers(static_cast<GLFWwindow *>(m_NativeWindowHandle));
 }

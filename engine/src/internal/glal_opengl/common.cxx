@@ -1,3 +1,4 @@
+#include <fxng/log.hxx>
 #include <fxng/internal/glal_opengl.hxx>
 
 fxng::glal::Instance *fxng::glal::CreateInstanceOpenGL(const InstanceDesc &desc)
@@ -5,19 +6,14 @@ fxng::glal::Instance *fxng::glal::CreateInstanceOpenGL(const InstanceDesc &desc)
     return new opengl::Instance(desc);
 }
 
-void fxng::glal::opengl::TranslateFormat(
-    const ImageFormat format,
-    std::uint32_t *internal_format,
-    std::uint32_t *external_format,
-    std::uint32_t *type)
+void fxng::glal::opengl::TranslateImageFormat(
+    const ImageFormat image_format,
+    GLenum *internal_format,
+    GLenum *external_format,
+    GLenum *type)
 {
-    switch (format)
+    switch (image_format)
     {
-    case ImageFormat_None:
-        internal_format && ((*internal_format = 0));
-        external_format && ((*external_format = 0));
-        type && ((*type = 0));
-        break;
     case ImageFormat_RGBA8_UNorm:
         internal_format && ((*internal_format = GL_RGBA8));
         external_format && ((*external_format = GL_RGBA));
@@ -58,5 +54,70 @@ void fxng::glal::opengl::TranslateFormat(
         external_format && ((*external_format = GL_DEPTH_COMPONENT));
         type && ((*type = GL_FLOAT));
         break;
+    default:
+        Fatal("image format not supported");
+    }
+}
+
+void fxng::glal::opengl::TranslateDataType(
+    const DataType data_type,
+    std::uint32_t *size,
+    GLenum *type,
+    GLboolean *normalized)
+{
+    switch (data_type)
+    {
+    case DataType_UInt8:
+        size && ((*size = sizeof(GLubyte)));
+        type && ((*type = GL_UNSIGNED_BYTE));
+        normalized && ((*normalized = GL_TRUE));
+        break;
+    case DataType_UInt16:
+        size && ((*size = sizeof(GLushort)));
+        type && ((*type = GL_UNSIGNED_SHORT));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_UInt32:
+        size && ((*size = sizeof(GLuint)));
+        type && ((*type = GL_UNSIGNED_INT));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_Int8:
+        size && ((*size = sizeof(GLbyte)));
+        type && ((*type = GL_BYTE));
+        normalized && ((*normalized = GL_TRUE));
+        break;
+    case DataType_Int16:
+        size && ((*size = sizeof(GLshort)));
+        type && ((*type = GL_SHORT));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_Int32:
+        size && ((*size = sizeof(GLint)));
+        type && ((*type = GL_INT));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_Half:
+        size && ((*size = sizeof(GLhalf)));
+        type && ((*type = GL_HALF_FLOAT));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_Float:
+        size && ((*size = sizeof(GLfloat)));
+        type && ((*type = GL_FLOAT));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_Fixed:
+        size && ((*size = sizeof(GLfixed)));
+        type && ((*type = GL_FIXED));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    case DataType_Double:
+        size && ((*size = sizeof(GLdouble)));
+        type && ((*type = GL_DOUBLE));
+        normalized && ((*normalized = GL_FALSE));
+        break;
+    default:
+        Fatal("vertex attribute type not supported");
     }
 }

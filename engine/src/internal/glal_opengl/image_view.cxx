@@ -5,10 +5,6 @@ fxng::glal::opengl::ImageView::ImageView(Image *image)
 {
 }
 
-fxng::glal::opengl::ImageView::~ImageView()
-{
-}
-
 const fxng::glal::Image *fxng::glal::opengl::ImageView::GetImage() const
 {
     return m_Image;

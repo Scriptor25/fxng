@@ -29,12 +29,13 @@ void fxng::glal::opengl::CommandBuffer::End()
     glDeleteVertexArrays(1, &m_VertexArray);
 
     m_Pipeline = nullptr;
-    m_IndexType = IndexType_None;
+    m_IndexType = DataType_None;
 }
 
 void fxng::glal::opengl::CommandBuffer::BeginRenderPass(const RenderPassDesc &desc)
 {
     Assert(desc.DepthCount <= 1, "opengl only supports one depth attachment per render pass");
+    Assert(desc.StencilCount <= 1, "opengl only supports one stencil attachment per render pass");
 
     glCreateFramebuffers(1, &m_Framebuffer);
 
@@ -57,8 +58,6 @@ void fxng::glal::opengl::CommandBuffer::BeginRenderPass(const RenderPassDesc &de
                 attachment->Value.Color);
     }
 
-    glNamedFramebufferDrawBuffers(m_Framebuffer, static_cast<GLsizei>(attachments.size()), attachments.data());
-
     for (std::uint32_t i = 0; i < desc.DepthCount; ++i)
     {
         const auto attachment = desc.Depth + i;
@@ -66,17 +65,39 @@ void fxng::glal::opengl::CommandBuffer::BeginRenderPass(const RenderPassDesc &de
 
         glNamedFramebufferTexture(m_Framebuffer, GL_DEPTH_ATTACHMENT, image_view_impl->GetHandle(), 0);
 
+        attachments.emplace_back(GL_DEPTH_ATTACHMENT);
+
         if (attachment->Clear)
             glClearNamedFramebufferfi(
                 m_Framebuffer,
                 GL_DEPTH,
                 static_cast<GLint>(i),
                 attachment->Value.Depth,
+                0);
+    }
+
+    for (std::uint32_t i = 0; i < desc.StencilCount; ++i)
+    {
+        const auto attachment = desc.Stencil + i;
+        const auto image_view_impl = dynamic_cast<const ImageView *>(attachment->View);
+
+        glNamedFramebufferTexture(m_Framebuffer, GL_STENCIL_ATTACHMENT, image_view_impl->GetHandle(), 0);
+
+        attachments.emplace_back(GL_STENCIL_ATTACHMENT);
+
+        if (attachment->Clear)
+            glClearNamedFramebufferfi(
+                m_Framebuffer,
+                GL_STENCIL,
+                static_cast<GLint>(i),
+                0.f,
                 attachment->Value.Stencil);
     }
 
+    glNamedFramebufferDrawBuffers(m_Framebuffer, static_cast<GLsizei>(attachments.size()), attachments.data());
+
     const auto ok = glCheckNamedFramebufferStatus(m_Framebuffer, GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-    Assert(ok, "framebuffer incomplete");
+    Assert(ok, "incomplete framebuffer");
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer);
 }
@@ -91,6 +112,8 @@ void fxng::glal::opengl::CommandBuffer::SetPipeline(const glal::Pipeline *pipeli
 {
     const auto pipeline_impl = dynamic_cast<const Pipeline *>(pipeline);
     glUseProgram(pipeline_impl->GetHandle());
+
+    pipeline_impl->LayoutVertexArray(m_VertexArray);
 
     m_Pipeline = pipeline_impl;
 }
@@ -122,7 +145,7 @@ void fxng::glal::opengl::CommandBuffer::BindVertexBuffer(const glal::Buffer *buf
         static_cast<GLsizei>(m_Pipeline->GetVertexStride()));
 }
 
-void fxng::glal::opengl::CommandBuffer::BindIndexBuffer(const glal::Buffer *buffer, const IndexType type)
+void fxng::glal::opengl::CommandBuffer::BindIndexBuffer(const glal::Buffer *buffer, const DataType type)
 {
     const auto buffer_impl = dynamic_cast<const Buffer *>(buffer);
     glVertexArrayElementBuffer(m_VertexArray, buffer_impl->GetHandle());
@@ -135,7 +158,7 @@ void fxng::glal::opengl::CommandBuffer::BindBuffer(
     const ShaderStage stages,
     const glal::Buffer *buffer)
 {
-    (void) stages;
+    (void) stages; // opengl binds to all stages
 
     const auto buffer_impl = dynamic_cast<const Buffer *>(buffer);
     glBindBufferBase(GL_UNIFORM_BUFFER, slot, buffer_impl->GetHandle());
@@ -147,7 +170,7 @@ void fxng::glal::opengl::CommandBuffer::BindImageView(
     const glal::ImageView *image_view,
     const glal::Sampler *sampler)
 {
-    (void) stages;
+    (void) stages; // opengl binds to all stages
 
     const auto image_view_impl = dynamic_cast<const ImageView *>(image_view);
     const auto sampler_impl = dynamic_cast<const Sampler *>(sampler);
@@ -170,22 +193,10 @@ void fxng::glal::opengl::CommandBuffer::DrawIndexed(const std::uint32_t index_co
     Assert(m_Pipeline, "pipeline not set");
     Assert(m_Pipeline->GetType() == PipelineType_Graphics, "pipeline is not graphics");
 
-    GLenum type{};
-    GLuint size{};
-    switch (m_IndexType)
-    {
-    case IndexType_None:
-        break;
-    case IndexType_UInt16:
-        type = GL_UNSIGNED_SHORT;
-        size = 2;
-        break;
-    case IndexType_UInt32:
-        type = GL_UNSIGNED_INT;
-        size = 4;
-        break;
-    }
-    Assert(type, "index type not set");
+    std::uint32_t size;
+    GLenum type;
+
+    TranslateDataType(m_IndexType, &size, &type, nullptr);
 
     glBindVertexArray(m_VertexArray);
     glDrawElementsBaseVertex(
@@ -211,6 +222,9 @@ void fxng::glal::opengl::CommandBuffer::CopyBuffer(
     const std::size_t dst_offset,
     const std::size_t size)
 {
+    Assert(src_buffer, "missing source buffer");
+    Assert(dst_buffer, "missing destination buffer");
+
     const auto src_buffer_impl = dynamic_cast<const Buffer *>(src_buffer);
     const auto dst_buffer_impl = dynamic_cast<const Buffer *>(dst_buffer);
 
@@ -227,9 +241,8 @@ void fxng::glal::opengl::CommandBuffer::CopyBufferToImage(const glal::Buffer *sr
     const auto src_buffer_impl = dynamic_cast<const Buffer *>(src_buffer);
     const auto dst_image_impl = dynamic_cast<const Image *>(dst_image);
 
-    GLenum format{};
-    GLenum type{};
-    TranslateFormat(dst_image_impl->GetFormat(), nullptr, &format, &type);
+    GLenum format, type;
+    TranslateImageFormat(dst_image_impl->GetFormat(), nullptr, &format, &type);
 
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, src_buffer_impl->GetHandle());
     glTextureSubImage3D(

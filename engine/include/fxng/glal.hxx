@@ -27,18 +27,18 @@ namespace fxng::glal
     class ShaderModule;
     class Pipeline;
 
-    enum DeviceFeature : std::uint32_t
+    enum DeviceFeature
     {
-        DeviceFeature_None = 0,
+        DeviceFeature_None,
 
-        DeviceFeature_Compute        = 1 << 0,
-        DeviceFeature_GeometryShader = 1 << 1,
-        DeviceFeature_Tessellation   = 1 << 2,
-        DeviceFeature_RayTracing     = 1 << 3,
+        DeviceFeature_Compute,
+        DeviceFeature_GeometryShader,
+        DeviceFeature_Tessellation,
+        DeviceFeature_RayTracing,
 
-        DeviceFeature_ExplicitBarriers  = 1 << 4,
-        DeviceFeature_DescriptorSets    = 1 << 5,
-        DeviceFeature_TimelineSemaphore = 1 << 6,
+        DeviceFeature_ExplicitBarriers,
+        DeviceFeature_DescriptorSets,
+        DeviceFeature_TimelineSemaphore,
     };
 
     enum QueueType : std::uint32_t
@@ -50,49 +50,52 @@ namespace fxng::glal
         QueueType_Present  = 1 << 3,
     };
 
-    enum CommandBufferUsage : std::uint32_t
+    enum CommandBufferUsage
     {
-        CommandBufferUsage_None     = 0,
-        CommandBufferUsage_Once     = 1 << 0,
-        CommandBufferUsage_Reusable = 1 << 1,
+        CommandBufferUsage_None,
+        CommandBufferUsage_Once,
+        CommandBufferUsage_Reusable,
     };
 
-    enum ShaderStage : std::uint32_t
+    enum ShaderStage
     {
-        ShaderStage_None                   = 0,
-        ShaderStage_Vertex                 = 1 << 0,
-        ShaderStage_Geometry               = 1 << 1,
-        ShaderStage_TessellationControl    = 1 << 2,
-        ShaderStage_TessellationEvaluation = 1 << 3,
-        ShaderStage_Fragment               = 1 << 4,
-        ShaderStage_Compute                = 1 << 5,
-        ShaderStage_RayGeneration          = 1 << 6,
-        ShaderStage_RayHit                 = 1 << 7,
-        ShaderStage_RayMiss                = 1 << 8,
+        ShaderStage_None,
+
+        ShaderStage_Vertex,
+        ShaderStage_Geometry,
+        ShaderStage_TessellationControl,
+        ShaderStage_TessellationEvaluation,
+        ShaderStage_Fragment,
+
+        ShaderStage_Compute,
+
+        ShaderStage_RayGeneration,
+        ShaderStage_RayHit,
+        ShaderStage_RayMiss,
     };
 
-    enum PipelineType : std::uint32_t
+    enum PipelineType
     {
-        PipelineType_None       = 0,
-        PipelineType_Graphics   = 1 << 0,
-        PipelineType_Compute    = 1 << 1,
-        PipelineType_RayTracing = 1 << 2,
+        PipelineType_None,
+        PipelineType_Graphics,
+        PipelineType_Compute,
+        PipelineType_RayTracing,
     };
 
-    enum BufferUsage : std::uint32_t
+    enum BufferUsage
     {
-        BufferUsage_None          = 0,
-        BufferUsage_VertexBuffer  = 1 << 0,
-        BufferUsage_IndexBuffer   = 1 << 1,
-        BufferUsage_StorageBuffer = 1 << 2,
+        BufferUsage_None,
+        BufferUsage_VertexBuffer,
+        BufferUsage_IndexBuffer,
+        BufferUsage_StorageBuffer,
     };
 
-    enum MemoryUsage : std::uint32_t
+    enum MemoryUsage
     {
-        MemoryUsage_None         = 0,
-        MemoryUsage_DeviceLocal  = 1 << 0,
-        MemoryUsage_HostToDevice = 1 << 1,
-        MemoryUsage_DeviceToHost = 1 << 2,
+        MemoryUsage_None,
+        MemoryUsage_DeviceLocal,
+        MemoryUsage_HostToDevice,
+        MemoryUsage_DeviceToHost,
     };
 
     enum ImageFormat
@@ -111,38 +114,54 @@ namespace fxng::glal
         ImageFormat_D32F,
     };
 
-    enum IndexType: std::uint32_t
+    enum ImageDimension
     {
-        IndexType_None   = 0,
-        IndexType_UInt16 = 1 << 0,
-        IndexType_UInt32 = 1 << 1,
+        ImageDimension_None,
+        ImageDimension_1D,
+        ImageDimension_2D,
+        ImageDimension_3D,
     };
 
-    enum ResourceState : std::uint32_t
+    enum DataType
     {
-        ResourceState_None            = 0,
-        ResourceState_VertexBuffer    = 1 << 0,
-        ResourceState_IndexBuffer     = 1 << 1,
-        ResourceState_ConstantBuffer  = 1 << 2,
-        ResourceState_ShaderResource  = 1 << 3,
-        ResourceState_UnorderedAccess = 1 << 4,
-        ResourceState_RenderTarget    = 1 << 5,
-        ResourceState_DepthStencil    = 1 << 6,
-        ResourceState_CopySrc         = 1 << 7,
-        ResourceState_CopyDst         = 1 << 8,
-        ResourceState_Present         = 1 << 9,
+        DataType_None,
+        DataType_UInt8,
+        DataType_UInt16,
+        DataType_UInt32,
+        DataType_Int8,
+        DataType_Int16,
+        DataType_Int32,
+        DataType_Half,
+        DataType_Float,
+        DataType_Fixed,
+        DataType_Double,
     };
 
-    enum Filter : std::uint32_t
+    enum ResourceState
     {
-        Filter_None = 0,
+        ResourceState_None,
+        ResourceState_VertexBuffer,
+        ResourceState_IndexBuffer,
+        ResourceState_ConstantBuffer,
+        ResourceState_ShaderResource,
+        ResourceState_UnorderedAccess,
+        ResourceState_RenderTarget,
+        ResourceState_DepthStencil,
+        ResourceState_CopySrc,
+        ResourceState_CopyDst,
+        ResourceState_Present,
+    };
+
+    enum Filter
+    {
+        Filter_None,
         Filter_Nearest,
         Filter_Linear,
     };
 
-    enum AddressMode : std::uint32_t
+    enum AddressMode
     {
-        AddressMode_None = 0,
+        AddressMode_None,
         AddressMode_Repeat,
         AddressMode_Clamp,
         AddressMode_Mirror,
@@ -202,9 +221,10 @@ namespace fxng::glal
     struct ImageDesc
     {
         ImageFormat Format;
+        ImageDimension Dimension;
         Extent3D Extent;
-        std::uint32_t MipLevels;
-        std::uint32_t ArrayLayers;
+        std::uint32_t MipLevelCount;
+        std::uint32_t ArrayLayerCount;
     };
 
     /**
@@ -239,6 +259,18 @@ namespace fxng::glal
     };
 
     /**
+     * Vertex Attribute Descriptor
+     */
+    struct VertexAttributeDesc
+    {
+        std::uint32_t Binding;
+        std::uint32_t Location;
+        DataType Type;
+        std::uint32_t Count;
+        std::uint32_t Offset;
+    };
+
+    /**
      * Pipeline Descriptor - describes a full graphics, compute or ray-tracing pipeline with multiple stages
      */
     struct PipelineDesc
@@ -247,6 +279,9 @@ namespace fxng::glal
 
         const PipelineStageDesc *Stages;
         std::uint32_t StageCount;
+
+        const VertexAttributeDesc *VertexAttributes;
+        std::uint32_t VertexAttributeCount;
 
         bool DepthTest;
         bool DepthWrite;
@@ -293,6 +328,9 @@ namespace fxng::glal
 
         const RenderTargetDesc *Depth;
         std::uint32_t DepthCount;
+
+        const RenderTargetDesc *Stencil;
+        std::uint32_t StencilCount;
     };
 
     class Instance
@@ -309,6 +347,7 @@ namespace fxng::glal
         virtual ~PhysicalDevice() = default;
 
         virtual Device *CreateDevice() = 0;
+        virtual void DestroyDevice(Device *device) = 0;
 
         [[nodiscard]] virtual bool Supports(DeviceFeature feature) const = 0;
         [[nodiscard]] virtual const DeviceLimits &GetLimits() const = 0;
@@ -320,16 +359,28 @@ namespace fxng::glal
         virtual ~Device() = default;
 
         virtual Buffer *CreateBuffer(const BufferDesc &desc) = 0;
+        virtual void DestroyBuffer(Buffer *buffer) = 0;
+
         virtual Image *CreateImage(const ImageDesc &desc) = 0;
+        virtual void DestroyImage(Image *image) = 0;
+
         virtual Sampler *CreateSampler(const SamplerDesc &desc) = 0;
+        virtual void DestroySampler(Sampler *sampler) = 0;
 
         virtual ShaderModule *CreateShaderModule(const ShaderModuleDesc &desc) = 0;
+        virtual void DestroyShaderModule(ShaderModule *shader_module) = 0;
+
         virtual Pipeline *CreatePipeline(const PipelineDesc &desc) = 0;
+        virtual void DestroyPipeline(Pipeline *pipeline) = 0;
+
         virtual Swapchain *CreateSwapchain(const SwapchainDesc &desc) = 0;
+        virtual void DestroySwapchain(Swapchain *swapchain) = 0;
 
         virtual CommandBuffer *CreateCommandBuffer(CommandBufferUsage usage) = 0;
+        virtual void DestroyCommandBuffer(CommandBuffer *command_buffer) = 0;
 
         virtual Fence *CreateFence() = 0;
+        virtual void DestroyFence(Fence *fence) = 0;
 
         virtual Queue *GetQueue(QueueType type) = 0;
 
@@ -434,7 +485,7 @@ namespace fxng::glal
         virtual void SetScissor(int x, int y, int w, int h) = 0;
 
         virtual void BindVertexBuffer(const Buffer *buffer, std::size_t offset) = 0;
-        virtual void BindIndexBuffer(const Buffer *buffer, IndexType type) = 0;
+        virtual void BindIndexBuffer(const Buffer *buffer, DataType type) = 0;
 
         virtual void BindBuffer(
             std::uint32_t slot,

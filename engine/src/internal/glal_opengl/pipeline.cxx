@@ -5,12 +5,24 @@
 fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
     : m_Device(device),
       m_Type(desc.Type),
-      m_VertexStride(5 * sizeof(GLfloat)) // TODO: vertex stride
+      m_VertexAttributes(desc.VertexAttributeCount),
+      m_VertexStride()
 {
     // TODO: depth and blend
     (void) desc.DepthTest;
     (void) desc.DepthWrite;
     (void) desc.BlendEnable;
+
+    for (std::uint32_t i = 0; i < desc.VertexAttributeCount; ++i)
+    {
+        const auto vertex_attribute = desc.VertexAttributes + i;
+        m_VertexAttributes[i] = *vertex_attribute;
+
+        std::uint32_t size;
+        TranslateDataType(vertex_attribute->Type, &size, nullptr, nullptr);
+
+        m_VertexStride += size * vertex_attribute->Count;
+    }
 
     m_Handle = glCreateProgram();
 
@@ -64,6 +76,27 @@ fxng::glal::PipelineType fxng::glal::opengl::Pipeline::GetType() const
 std::uint32_t fxng::glal::opengl::Pipeline::GetVertexStride() const
 {
     return m_VertexStride;
+}
+
+void fxng::glal::opengl::Pipeline::LayoutVertexArray(const std::uint32_t vertex_array) const
+{
+    for (auto &vertex_attribute : m_VertexAttributes)
+    {
+        GLenum type;
+        GLboolean normalized;
+
+        TranslateDataType(vertex_attribute.Type, nullptr, &type, &normalized);
+
+        glEnableVertexArrayAttrib(vertex_array, vertex_attribute.Location);
+        glVertexArrayAttribBinding(vertex_array, vertex_attribute.Location, vertex_attribute.Binding);
+        glVertexArrayAttribFormat(
+            vertex_array,
+            vertex_attribute.Location,
+            static_cast<GLint>(vertex_attribute.Count),
+            type,
+            normalized,
+            vertex_attribute.Offset);
+    }
 }
 
 std::uint32_t fxng::glal::opengl::Pipeline::GetHandle() const

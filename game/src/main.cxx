@@ -5,7 +5,6 @@
 #include <fxng/engine.hxx>
 #include <fxng/glal.hxx>
 #include <fxng/log.hxx>
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 static void test_packaged()
@@ -17,14 +16,14 @@ static void test_packaged()
 
 struct Vertex
 {
-    float pos[2];
+    float position[2];
     float color[3];
 };
 
 static constexpr Vertex vertices[] = {
-    { { 0.0f, -0.5f }, { 1, 0, 0 } },
-    { { 0.5f, 0.5f }, { 0, 1, 0 } },
-    { { -0.5f, 0.5f }, { 0, 0, 1 } },
+    { { -0.5f, -0.5f }, { 1, 0, 0 } },
+    { { 0.0f, 0.5f }, { 0, 1, 0 } },
+    { { 0.5f, -0.5f }, { 0, 0, 1 } },
 };
 
 static fxng::glal::ShaderModule *load_shader_module(
@@ -37,13 +36,31 @@ static fxng::glal::ShaderModule *load_shader_module(
 
     std::vector<char> code(stream.tellg());
     stream.seekg(0, std::ios::beg);
-    stream.read(code.data(), code.size());
+    stream.read(code.data(), static_cast<long>(code.size()));
 
     return device->CreateShaderModule(
         {
             .Stage = stage,
             .Code = code.data(),
             .Size = code.size(),
+        });
+}
+
+struct
+{
+    fxng::glal::Device *device;
+    fxng::glal::Swapchain *swapchain;
+} static application_state;
+
+static void glfw_framebuffer_size_callback(GLFWwindow *window, const int width, const int height)
+{
+    application_state.device->DestroySwapchain(application_state.swapchain);
+    application_state.swapchain = application_state.device->CreateSwapchain(
+        {
+            .NativeWindowHandle = window,
+            .Extent = { width, height },
+            .Format = fxng::glal::ImageFormat_BGRA8_UNorm,
+            .ImageCount = 2,
         });
 }
 
@@ -54,14 +71,18 @@ int main()
     glfwInit();
 
     glfwDefaultWindowHints();
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 
-    const auto native_window_handle = glfwCreateWindow(1280, 720, "Hello World", nullptr, nullptr);
-    glfwMakeContextCurrent(native_window_handle);
+    const auto window = glfwCreateWindow(800, 600, "Hello World", nullptr, nullptr);
+    glfwMakeContextCurrent(window);
+
+    glfwSetFramebufferSizeCallback(window, glfw_framebuffer_size_callback);
+
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
 
     const auto instance = fxng::glal::CreateInstanceOpenGL(
         {
@@ -80,12 +101,13 @@ int main()
     const auto graphics_queue = device->GetQueue(fxng::glal::QueueType_Graphics);
     const auto present_queue = device->GetQueue(fxng::glal::QueueType_Present);
 
-    const auto swapchain = device->CreateSwapchain(
+    application_state.device = device;
+    application_state.swapchain = device->CreateSwapchain(
         {
-            .NativeWindowHandle = native_window_handle,
-            .Extent = { 1280, 720 },
+            .NativeWindowHandle = window,
+            .Extent = { width, height },
             .Format = fxng::glal::ImageFormat_BGRA8_UNorm,
-            .ImageCount = 1,
+            .ImageCount = 2,
         });
 
     const auto vertex_buffer = device->CreateBuffer(
@@ -116,11 +138,33 @@ int main()
         },
     };
 
+    constexpr std::array vertex_attributes
+    {
+        fxng::glal::VertexAttributeDesc
+        {
+            .Binding = 0,
+            .Location = 0,
+            .Type = fxng::glal::DataType_Float,
+            .Count = 2,
+            .Offset = offsetof(Vertex, position),
+        },
+        fxng::glal::VertexAttributeDesc
+        {
+            .Binding = 0,
+            .Location = 1,
+            .Type = fxng::glal::DataType_Float,
+            .Count = 3,
+            .Offset = offsetof(Vertex, color),
+        },
+    };
+
     const auto pipeline = device->CreatePipeline(
         {
             .Type = fxng::glal::PipelineType_Graphics,
             .Stages = pipeline_stages.data(),
             .StageCount = pipeline_stages.size(),
+            .VertexAttributes = vertex_attributes.data(),
+            .VertexAttributeCount = vertex_attributes.size(),
             .DepthTest = false,
             .DepthWrite = false,
             .BlendEnable = false,
@@ -130,9 +174,11 @@ int main()
 
     const auto fence = device->CreateFence();
 
-    while (!glfwWindowShouldClose(native_window_handle))
+    while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+
+        const auto swapchain = application_state.swapchain;
 
         const auto image_index = swapchain->AcquireNextImage(fence);
         const auto image_view = swapchain->GetImageView(image_index);
@@ -181,17 +227,14 @@ int main()
 
         graphics_queue->Submit(command_buffer, 1, fence);
         present_queue->Present(swapchain);
-
-        fence->Wait();
-        fence->Reset();
     }
 
     fxng::glal::DestroyInstance(instance);
 
-    glfwDestroyWindow(native_window_handle);
+    glfwDestroyWindow(window);
     glfwTerminate();
 
-    fxng::Engine engine(
+    /*fxng::Engine engine(
         {
             .Application = {
                 .Name = "Game",
@@ -202,5 +245,5 @@ int main()
                 { .Main = true },
             },
             .InitialScene = "entry",
-        });
+        });*/
 }
