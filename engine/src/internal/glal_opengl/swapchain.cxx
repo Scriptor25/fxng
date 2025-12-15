@@ -52,14 +52,13 @@ fxng::glal::ImageView *fxng::glal::opengl::Swapchain::GetImageView(const std::ui
 
 std::uint32_t fxng::glal::opengl::Swapchain::AcquireNextImage(glal::Fence *fence)
 {
-    const auto image_index = m_ImageIndex;
     m_ImageIndex = (m_ImageIndex + 1) % m_ImageCount;
 
-    if (const auto in_flight = m_Fences.at(image_index))
+    if (const auto in_flight = m_Fences.at(m_ImageIndex))
         in_flight->Wait();
 
-    m_Fences.at(image_index) = fence;
-    return image_index;
+    m_Fences.at(m_ImageIndex) = fence;
+    return m_ImageIndex;
 }
 
 void fxng::glal::opengl::Swapchain::Present() const

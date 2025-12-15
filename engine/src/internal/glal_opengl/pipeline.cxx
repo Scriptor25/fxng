@@ -61,6 +61,8 @@ fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
 
         Fatal("failed to validate program: {}", message);
     }
+
+    glUniformBlockBinding(m_Handle, 0, 0);
 }
 
 fxng::glal::opengl::Pipeline::~Pipeline()

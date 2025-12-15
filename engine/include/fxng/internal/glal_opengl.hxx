@@ -135,8 +135,6 @@ namespace fxng::glal::opengl
         friend Device;
 
     public:
-        ~CommandBuffer() override;
-
         void Begin() override;
         void End() override;
 

@@ -12,10 +12,6 @@ fxng::glal::opengl::CommandBuffer::CommandBuffer(Device *device, const CommandBu
 {
 }
 
-fxng::glal::opengl::CommandBuffer::~CommandBuffer()
-{
-}
-
 void fxng::glal::opengl::CommandBuffer::Begin()
 {
     glCreateVertexArrays(1, &m_VertexArray);
