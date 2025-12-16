@@ -1,7 +1,7 @@
 #include <common/log.hxx>
 #include <glal/opengl.hxx>
 
-glal::opengl::ShaderModule::ShaderModule(const Ptr<Device> device, const ShaderModuleDesc &desc)
+glal::opengl::ShaderModuleT::ShaderModuleT(DeviceT *device, const ShaderModuleDesc &desc)
     : m_Device(device),
       m_Stage(desc.Stage)
 {
@@ -27,7 +27,7 @@ glal::opengl::ShaderModule::ShaderModule(const Ptr<Device> device, const ShaderM
         type = GL_COMPUTE_SHADER;
         break;
     default:
-        common::Fatal("shader stage not supported");
+        common::Fatal("stage not supported");
     }
 
     m_Handle = glCreateShader(type);
@@ -35,17 +35,17 @@ glal::opengl::ShaderModule::ShaderModule(const Ptr<Device> device, const ShaderM
     glSpecializeShader(m_Handle, "main", 0, nullptr, nullptr);
 }
 
-glal::opengl::ShaderModule::~ShaderModule()
+glal::opengl::ShaderModuleT::~ShaderModuleT()
 {
     glDeleteShader(m_Handle);
 }
 
-glal::ShaderStage glal::opengl::ShaderModule::GetStage() const
+glal::ShaderStage glal::opengl::ShaderModuleT::GetStage() const
 {
     return m_Stage;
 }
 
-std::uint32_t glal::opengl::ShaderModule::GetHandle() const
+std::uint32_t glal::opengl::ShaderModuleT::GetHandle() const
 {
     return m_Handle;
 }

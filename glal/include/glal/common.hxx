@@ -42,8 +42,8 @@ namespace glal
      */
     struct Extent2D
     {
-        int Width;
-        int Height;
+        std::uint32_t Width;
+        std::uint32_t Height;
     };
 
     /**
@@ -51,9 +51,9 @@ namespace glal
      */
     struct Extent3D
     {
-        int Width;
-        int Height;
-        int Depth;
+        std::uint32_t Width;
+        std::uint32_t Height;
+        std::uint32_t Depth;
     };
 
     /**
@@ -62,7 +62,7 @@ namespace glal
     struct PipelineStage
     {
         ShaderStage Stage;
-        ShaderModule *Module;
+        ShaderModuleT *Module;
     };
 
     /**
@@ -70,7 +70,7 @@ namespace glal
      */
     struct RenderTarget
     {
-        ImageView *View;
+        ImageViewT *View;
 
         bool Clear;
         ClearValue Value;

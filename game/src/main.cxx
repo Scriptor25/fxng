@@ -1,10 +1,11 @@
 #define GLFW_INCLUDE_NONE
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
+#include <common/log.hxx>
 #include <fxng/engine.hxx>
 #include <glal/glal.hxx>
-#include <common/log.hxx>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
@@ -34,8 +35,8 @@ static constexpr Vertex vertices[] = {
     { { 0.5f, -0.28867513f }, { 0, 0, 1 } },
 };
 
-static glal::ShaderModule *load_shader_module(
-    glal::Device *device,
+static glal::ShaderModuleT *load_shader_module(
+    glal::Device device,
     glal::ShaderStage stage,
     std::filesystem::path path)
 {
@@ -56,8 +57,8 @@ static glal::ShaderModule *load_shader_module(
 
 struct
 {
-    glal::Device *device;
-    glal::Swapchain *swapchain;
+    glal::Device device;
+    glal::Swapchain swapchain;
 } static application_state = {
     .device = nullptr,
     .swapchain = nullptr,
@@ -69,10 +70,33 @@ static void glfw_framebuffer_size_callback(GLFWwindow *window, const int width, 
     application_state.swapchain = application_state.device->CreateSwapchain(
         {
             .NativeWindowHandle = window,
-            .Extent = { width, height },
+            .Extent = { static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height) },
             .Format = glal::ImageFormat_BGRA8_UNorm,
             .ImageCount = 2,
         });
+}
+
+static GLFWwindow *create_window_opengl()
+{
+    glfwDefaultWindowHints();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+
+    const auto window = glfwCreateWindow(800, 600, "Hello OpenGL", nullptr, nullptr);
+
+    glfwMakeContextCurrent(window);
+
+    return window;
+}
+
+static GLFWwindow *create_window_vulkan()
+{
+    glfwDefaultWindowHints();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    return glfwCreateWindow(800, 600, "Hello Vulkan", nullptr, nullptr);
 }
 
 int main()
@@ -81,29 +105,23 @@ int main()
 
     glfwInit();
 
-    glfwDefaultWindowHints();
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    constexpr glal::InstanceDesc instance_desc
+    {
+        .EnableValidation = true,
+        .ApplicationName = "Hello World",
+    };
 
-    const auto window = glfwCreateWindow(800, 600, "Hello World", nullptr, nullptr);
-    glfwMakeContextCurrent(window);
-
-    glfwSetFramebufferSizeCallback(window, glfw_framebuffer_size_callback);
-
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-
-    const auto instance = glal::CreateInstanceOpenGL(
-        {
-            .EnableValidation = true,
-            .ApplicationName = "Hello World",
-        });
+#if 0
+    const auto window = create_window_opengl();
+    const auto instance = glal::CreateInstanceOpenGL(instance_desc);
+#else
+    const auto window = create_window_vulkan();
+    const auto instance = glal::CreateInstanceVulkan(instance_desc);
+#endif
 
     const auto physical_device_count = instance->EnumeratePhysicalDevices(nullptr);
 
-    std::vector<glal::PhysicalDevice *> physical_devices(physical_device_count);
+    std::vector<glal::PhysicalDevice> physical_devices(physical_device_count);
     instance->EnumeratePhysicalDevices(physical_devices.data());
 
     const auto physical_device = physical_devices.front();
@@ -112,11 +130,15 @@ int main()
     const auto graphics_queue = device->GetQueue(glal::QueueType_Graphics);
     const auto present_queue = device->GetQueue(glal::QueueType_Present);
 
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glfwSetFramebufferSizeCallback(window, glfw_framebuffer_size_callback);
+
     application_state.device = device;
     application_state.swapchain = device->CreateSwapchain(
         {
             .NativeWindowHandle = window,
-            .Extent = { width, height },
+            .Extent = { static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height) },
             .Format = glal::ImageFormat_BGRA8_UNorm,
             .ImageCount = 2,
         });

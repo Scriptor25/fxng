@@ -1,14 +1,14 @@
 #include <glal/opengl.hxx>
 
-glal::opengl::Queue::Queue(const Ptr<Device> device)
+glal::opengl::QueueT::QueueT(DeviceT *device)
     : m_Device(device)
 {
 }
 
-void glal::opengl::Queue::Submit(
-    Ptr<glal::CommandBuffer> command_buffer,
+void glal::opengl::QueueT::Submit(
+    CommandBuffer command_buffer,
     const std::uint32_t command_buffer_count,
-    const Ptr<glal::Fence> fence)
+    const Fence fence)
 {
     // noop
 
@@ -16,7 +16,7 @@ void glal::opengl::Queue::Submit(
         fence->Reset();
 }
 
-void glal::opengl::Queue::Present(const Ptr<glal::Swapchain> swapchain)
+void glal::opengl::QueueT::Present(const Swapchain swapchain)
 {
     swapchain->Present();
 }

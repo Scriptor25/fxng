@@ -1,45 +1,31 @@
-#include <glal/opengl.hxx>
+#include <glal/vulkan.hxx>
 
-glal::opengl::DeviceT::DeviceT(PhysicalDeviceT *physical_device)
+glal::vulkan::DeviceT::DeviceT(PhysicalDeviceT *physical_device)
     : m_PhysicalDevice(physical_device)
 {
-    m_Queue = new QueueT(this);
+    const VkDeviceCreateInfo device_create_info
+    {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .queueCreateInfoCount = 0,
+        .pQueueCreateInfos = nullptr,
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = nullptr,
+        .enabledExtensionCount = 0,
+        .ppEnabledExtensionNames = nullptr,
+        .pEnabledFeatures = nullptr,
+    };
+
+    vkCreateDevice(physical_device->GetHandle(), &device_create_info, nullptr, &m_Handle);
 }
 
-glal::opengl::DeviceT::~DeviceT()
-{
-    for (const auto x : m_Buffers)
-        delete x;
-    for (const auto x : m_Images)
-        delete x;
-    for (const auto x : m_Samplers)
-        delete x;
-    for (const auto x : m_ShaderModules)
-        delete x;
-    for (const auto x : m_PipelineLayouts)
-        delete x;
-    for (const auto x : m_Pipelines)
-        delete x;
-    for (const auto x : m_DescriptorSetLayouts)
-        delete x;
-    for (const auto x : m_DescriptorSets)
-        delete x;
-    for (const auto x : m_Swapchains)
-        delete x;
-    for (const auto x : m_CommandBuffers)
-        delete x;
-    for (const auto x : m_Fences)
-        delete x;
-
-    delete m_Queue;
-}
-
-glal::Buffer glal::opengl::DeviceT::CreateBuffer(const BufferDesc &desc)
+glal::Buffer glal::vulkan::DeviceT::CreateBuffer(const BufferDesc &desc)
 {
     return m_Buffers.emplace_back(new BufferT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyBuffer(const Buffer buffer)
+void glal::vulkan::DeviceT::DestroyBuffer(const Buffer buffer)
 {
     for (auto it = m_Buffers.begin(); it != m_Buffers.end(); ++it)
         if (*it == buffer)
@@ -50,12 +36,12 @@ void glal::opengl::DeviceT::DestroyBuffer(const Buffer buffer)
         }
 }
 
-glal::Image glal::opengl::DeviceT::CreateImage(const ImageDesc &desc)
+glal::Image glal::vulkan::DeviceT::CreateImage(const ImageDesc &desc)
 {
     return m_Images.emplace_back(new ImageT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyImage(const Image image)
+void glal::vulkan::DeviceT::DestroyImage(const Image image)
 {
     for (auto it = m_Images.begin(); it != m_Images.end(); ++it)
         if (*it == image)
@@ -66,12 +52,12 @@ void glal::opengl::DeviceT::DestroyImage(const Image image)
         }
 }
 
-glal::ImageView glal::opengl::DeviceT::CreateImageView(const ImageViewDesc &desc)
+glal::ImageView glal::vulkan::DeviceT::CreateImageView(const ImageViewDesc &desc)
 {
     return m_ImageViews.emplace_back(new ImageViewT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyImageView(ImageView image_view)
+void glal::vulkan::DeviceT::DestroyImageView(const ImageView image_view)
 {
     for (auto it = m_ImageViews.begin(); it != m_ImageViews.end(); ++it)
         if (*it == image_view)
@@ -82,12 +68,12 @@ void glal::opengl::DeviceT::DestroyImageView(ImageView image_view)
         }
 }
 
-glal::Sampler glal::opengl::DeviceT::CreateSampler(const SamplerDesc &desc)
+glal::Sampler glal::vulkan::DeviceT::CreateSampler(const SamplerDesc &desc)
 {
     return m_Samplers.emplace_back(new SamplerT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroySampler(const Sampler sampler)
+void glal::vulkan::DeviceT::DestroySampler(const Sampler sampler)
 {
     for (auto it = m_Samplers.begin(); it != m_Samplers.end(); ++it)
         if (*it == sampler)
@@ -98,12 +84,12 @@ void glal::opengl::DeviceT::DestroySampler(const Sampler sampler)
         }
 }
 
-glal::ShaderModule glal::opengl::DeviceT::CreateShaderModule(const ShaderModuleDesc &desc)
+glal::ShaderModule glal::vulkan::DeviceT::CreateShaderModule(const ShaderModuleDesc &desc)
 {
     return m_ShaderModules.emplace_back(new ShaderModuleT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyShaderModule(const ShaderModule shader_module)
+void glal::vulkan::DeviceT::DestroyShaderModule(const ShaderModule shader_module)
 {
     for (auto it = m_ShaderModules.begin(); it != m_ShaderModules.end(); ++it)
         if (*it == shader_module)
@@ -114,13 +100,12 @@ void glal::opengl::DeviceT::DestroyShaderModule(const ShaderModule shader_module
         }
 }
 
-glal::PipelineLayout glal::opengl::DeviceT::CreatePipelineLayout(
-    const PipelineLayoutDesc &desc)
+glal::PipelineLayout glal::vulkan::DeviceT::CreatePipelineLayout(const PipelineLayoutDesc &desc)
 {
     return m_PipelineLayouts.emplace_back(new PipelineLayoutT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyPipelineLayout(const PipelineLayout pipeline_layout)
+void glal::vulkan::DeviceT::DestroyPipelineLayout(const PipelineLayout pipeline_layout)
 {
     for (auto it = m_PipelineLayouts.begin(); it != m_PipelineLayouts.end(); ++it)
         if (*it == pipeline_layout)
@@ -131,12 +116,12 @@ void glal::opengl::DeviceT::DestroyPipelineLayout(const PipelineLayout pipeline_
         }
 }
 
-glal::Pipeline glal::opengl::DeviceT::CreatePipeline(const PipelineDesc &desc)
+glal::Pipeline glal::vulkan::DeviceT::CreatePipeline(const PipelineDesc &desc)
 {
     return m_Pipelines.emplace_back(new PipelineT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyPipeline(const Pipeline pipeline)
+void glal::vulkan::DeviceT::DestroyPipeline(const Pipeline pipeline)
 {
     for (auto it = m_Pipelines.begin(); it != m_Pipelines.end(); ++it)
         if (*it == pipeline)
@@ -147,13 +132,12 @@ void glal::opengl::DeviceT::DestroyPipeline(const Pipeline pipeline)
         }
 }
 
-glal::DescriptorSetLayout glal::opengl::DeviceT::CreateDescriptorSetLayout(
-    const DescriptorSetLayoutDesc &desc)
+glal::DescriptorSetLayout glal::vulkan::DeviceT::CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc)
 {
     return m_DescriptorSetLayouts.emplace_back(new DescriptorSetLayoutT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyDescriptorSetLayout(const DescriptorSetLayout descriptor_set_layout)
+void glal::vulkan::DeviceT::DestroyDescriptorSetLayout(const DescriptorSetLayout descriptor_set_layout)
 {
     for (auto it = m_DescriptorSetLayouts.begin(); it != m_DescriptorSetLayouts.end(); ++it)
         if (*it == descriptor_set_layout)
@@ -164,13 +148,12 @@ void glal::opengl::DeviceT::DestroyDescriptorSetLayout(const DescriptorSetLayout
         }
 }
 
-glal::DescriptorSet glal::opengl::DeviceT::CreateDescriptorSet(
-    const DescriptorSetDesc &desc)
+glal::DescriptorSet glal::vulkan::DeviceT::CreateDescriptorSet(const DescriptorSetDesc &desc)
 {
     return m_DescriptorSets.emplace_back(new DescriptorSetT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroyDescriptorSet(const DescriptorSet descriptor_set)
+void glal::vulkan::DeviceT::DestroyDescriptorSet(const DescriptorSet descriptor_set)
 {
     for (auto it = m_DescriptorSets.begin(); it != m_DescriptorSets.end(); ++it)
         if (*it == descriptor_set)
@@ -181,12 +164,12 @@ void glal::opengl::DeviceT::DestroyDescriptorSet(const DescriptorSet descriptor_
         }
 }
 
-glal::Swapchain glal::opengl::DeviceT::CreateSwapchain(const SwapchainDesc &desc)
+glal::Swapchain glal::vulkan::DeviceT::CreateSwapchain(const SwapchainDesc &desc)
 {
     return m_Swapchains.emplace_back(new SwapchainT(this, desc));
 }
 
-void glal::opengl::DeviceT::DestroySwapchain(const Swapchain swapchain)
+void glal::vulkan::DeviceT::DestroySwapchain(const Swapchain swapchain)
 {
     for (auto it = m_Swapchains.begin(); it != m_Swapchains.end(); ++it)
         if (*it == swapchain)
@@ -197,13 +180,12 @@ void glal::opengl::DeviceT::DestroySwapchain(const Swapchain swapchain)
         }
 }
 
-glal::CommandBuffer glal::opengl::DeviceT::CreateCommandBuffer(
-    const CommandBufferUsage usage)
+glal::CommandBuffer glal::vulkan::DeviceT::CreateCommandBuffer(const CommandBufferUsage usage)
 {
     return m_CommandBuffers.emplace_back(new CommandBufferT(this, usage));
 }
 
-void glal::opengl::DeviceT::DestroyCommandBuffer(const CommandBuffer command_buffer)
+void glal::vulkan::DeviceT::DestroyCommandBuffer(const CommandBuffer command_buffer)
 {
     for (auto it = m_CommandBuffers.begin(); it != m_CommandBuffers.end(); ++it)
         if (*it == command_buffer)
@@ -214,12 +196,12 @@ void glal::opengl::DeviceT::DestroyCommandBuffer(const CommandBuffer command_buf
         }
 }
 
-glal::Fence glal::opengl::DeviceT::CreateFence()
+glal::Fence glal::vulkan::DeviceT::CreateFence()
 {
     return m_Fences.emplace_back(new FenceT(this));
 }
 
-void glal::opengl::DeviceT::DestroyFence(const Fence fence)
+void glal::vulkan::DeviceT::DestroyFence(const Fence fence)
 {
     for (auto it = m_Fences.begin(); it != m_Fences.end(); ++it)
         if (*it == fence)
@@ -230,17 +212,28 @@ void glal::opengl::DeviceT::DestroyFence(const Fence fence)
         }
 }
 
-glal::Queue glal::opengl::DeviceT::GetQueue(QueueType type)
+glal::Queue glal::vulkan::DeviceT::GetQueue(QueueType type)
 {
-    return m_Queue;
+    for (auto queue : m_Queues); // TODO
+    return nullptr;
 }
 
-bool glal::opengl::DeviceT::Supports(const DeviceFeature feature) const
+bool glal::vulkan::DeviceT::Supports(const DeviceFeature feature) const
 {
     return m_PhysicalDevice->Supports(feature);
 }
 
-const glal::DeviceLimits &glal::opengl::DeviceT::GetLimits() const
+const glal::DeviceLimits &glal::vulkan::DeviceT::GetLimits() const
 {
     return m_PhysicalDevice->GetLimits();
+}
+
+glal::vulkan::PhysicalDeviceT *glal::vulkan::DeviceT::GetPhysicalDevice() const
+{
+    return m_PhysicalDevice;
+}
+
+VkDevice glal::vulkan::DeviceT::GetHandle() const
+{
+    return m_Handle;
 }

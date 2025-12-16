@@ -12,77 +12,80 @@
  */
 namespace glal
 {
-    class Instance
+    class InstanceT
     {
     public:
-        virtual ~Instance() = default;
+        virtual ~InstanceT() = default;
 
-        virtual std::uint32_t EnumeratePhysicalDevices(Ptr<Ptr<PhysicalDevice>> devices) = 0;
+        virtual std::uint32_t EnumeratePhysicalDevices(PhysicalDevice *devices) = 0;
     };
 
-    class PhysicalDevice
+    class PhysicalDeviceT
     {
     public:
-        virtual ~PhysicalDevice() = default;
+        virtual ~PhysicalDeviceT() = default;
 
-        virtual Ptr<Device> CreateDevice() = 0;
-        virtual void DestroyDevice(Ptr<Device> device) = 0;
+        virtual Device CreateDevice() = 0;
+        virtual void DestroyDevice(Device device) = 0;
 
         [[nodiscard]] virtual bool Supports(DeviceFeature feature) const = 0;
         [[nodiscard]] virtual const DeviceLimits &GetLimits() const = 0;
     };
 
-    class Device
+    class DeviceT
     {
     public:
-        virtual ~Device() = default;
+        virtual ~DeviceT() = default;
 
-        virtual Ptr<Buffer> CreateBuffer(const BufferDesc &desc) = 0;
-        virtual void DestroyBuffer(Ptr<Buffer> buffer) = 0;
+        virtual Buffer CreateBuffer(const BufferDesc &desc) = 0;
+        virtual void DestroyBuffer(Buffer buffer) = 0;
 
-        virtual Ptr<Image> CreateImage(const ImageDesc &desc) = 0;
-        virtual void DestroyImage(Ptr<Image> image) = 0;
+        virtual Image CreateImage(const ImageDesc &desc) = 0;
+        virtual void DestroyImage(Image image) = 0;
 
-        virtual Ptr<Sampler> CreateSampler(const SamplerDesc &desc) = 0;
-        virtual void DestroySampler(Ptr<Sampler> sampler) = 0;
+        virtual ImageView CreateImageView(const ImageViewDesc &desc) = 0;
+        virtual void DestroyImageView(ImageView image_view) = 0;
 
-        virtual Ptr<ShaderModule> CreateShaderModule(const ShaderModuleDesc &desc) = 0;
-        virtual void DestroyShaderModule(Ptr<ShaderModule> shader_module) = 0;
+        virtual Sampler CreateSampler(const SamplerDesc &desc) = 0;
+        virtual void DestroySampler(Sampler sampler) = 0;
 
-        virtual Ptr<PipelineLayout> CreatePipelineLayout(const PipelineLayoutDesc &desc) = 0;
-        virtual void DestroyPipelineLayout(Ptr<PipelineLayout> pipeline_layout) = 0;
+        virtual ShaderModule CreateShaderModule(const ShaderModuleDesc &desc) = 0;
+        virtual void DestroyShaderModule(ShaderModule shader_module) = 0;
 
-        virtual Ptr<Pipeline> CreatePipeline(const PipelineDesc &desc) = 0;
-        virtual void DestroyPipeline(Ptr<Pipeline> pipeline) = 0;
+        virtual PipelineLayout CreatePipelineLayout(const PipelineLayoutDesc &desc) = 0;
+        virtual void DestroyPipelineLayout(PipelineLayout pipeline_layout) = 0;
 
-        virtual Ptr<DescriptorSetLayout> CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc) = 0;
-        virtual void DestroyDescriptorSetLayout(Ptr<DescriptorSetLayout> descriptor_set_layout) = 0;
+        virtual Pipeline CreatePipeline(const PipelineDesc &desc) = 0;
+        virtual void DestroyPipeline(Pipeline pipeline) = 0;
 
-        virtual Ptr<DescriptorSet> CreateDescriptorSet(const DescriptorSetDesc &desc) = 0;
-        virtual void DestroyDescriptorSet(Ptr<DescriptorSet> descriptor_set) = 0;
+        virtual DescriptorSetLayout CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc) = 0;
+        virtual void DestroyDescriptorSetLayout(DescriptorSetLayout descriptor_set_layout) = 0;
 
-        virtual Ptr<Swapchain> CreateSwapchain(const SwapchainDesc &desc) = 0;
-        virtual void DestroySwapchain(Ptr<Swapchain> swapchain) = 0;
+        virtual DescriptorSet CreateDescriptorSet(const DescriptorSetDesc &desc) = 0;
+        virtual void DestroyDescriptorSet(DescriptorSet descriptor_set) = 0;
 
-        virtual Ptr<CommandBuffer> CreateCommandBuffer(CommandBufferUsage usage) = 0;
-        virtual void DestroyCommandBuffer(Ptr<CommandBuffer> command_buffer) = 0;
+        virtual Swapchain CreateSwapchain(const SwapchainDesc &desc) = 0;
+        virtual void DestroySwapchain(Swapchain swapchain) = 0;
 
-        virtual Ptr<Fence> CreateFence() = 0;
-        virtual void DestroyFence(Ptr<Fence> fence) = 0;
+        virtual CommandBuffer CreateCommandBuffer(CommandBufferUsage usage) = 0;
+        virtual void DestroyCommandBuffer(CommandBuffer command_buffer) = 0;
 
-        virtual Ptr<Queue> GetQueue(QueueType type) = 0;
+        virtual Fence CreateFence() = 0;
+        virtual void DestroyFence(Fence fence) = 0;
+
+        virtual Queue GetQueue(QueueType type) = 0;
 
         [[nodiscard]] virtual bool Supports(DeviceFeature feature) const = 0;
         [[nodiscard]] virtual const DeviceLimits &GetLimits() const = 0;
     };
 
-    class Resource
+    class ResourceT
     {
     public:
-        virtual ~Resource() = default;
+        virtual ~ResourceT() = default;
     };
 
-    class Buffer : public Resource
+    class BufferT : public ResourceT
     {
     public:
         [[nodiscard]] virtual std::size_t GetSize() const = 0;
@@ -92,103 +95,105 @@ namespace glal
         virtual void Unmap() = 0;
     };
 
-    class Image : public Resource
+    class ImageT : public ResourceT
     {
     public:
         [[nodiscard]] virtual ImageFormat GetFormat() const = 0;
-        [[nodiscard]] virtual ImageDimension GetDimension() const = 0;
+        [[nodiscard]] virtual ImageType GetType() const = 0;
         [[nodiscard]] virtual Extent3D GetExtent() const = 0;
         [[nodiscard]] virtual std::uint32_t GetMipLevelCount() const = 0;
         [[nodiscard]] virtual std::uint32_t GetArrayLayerCount() const = 0;
     };
 
-    class ImageView
+    class ImageViewT
     {
     public:
-        virtual ~ImageView() = default;
+        virtual ~ImageViewT() = default;
 
-        [[nodiscard]] virtual Ptr<Image> GetImage() const = 0;
+        [[nodiscard]] virtual Image GetImage() const = 0;
+        [[nodiscard]] virtual ImageFormat GetFormat() const = 0;
+        [[nodiscard]] virtual ImageType GetType() const = 0;
     };
 
-    class Sampler
+    class SamplerT
     {
     public:
-        virtual ~Sampler() = default;
+        virtual ~SamplerT() = default;
     };
 
-    class PipelineLayout
+    class PipelineLayoutT
     {
     public:
-        virtual ~PipelineLayout() = default;
+        virtual ~PipelineLayoutT() = default;
 
-        [[nodiscard]] virtual Ptr<DescriptorSetLayout> GetDescriptorSetLayout(std::uint32_t index) const = 0;
+        [[nodiscard]] virtual DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const = 0;
         [[nodiscard]] virtual std::uint32_t GetDescriptorSetLayoutCount() const = 0;
     };
 
-    class Pipeline
+    class PipelineT
     {
     public:
-        virtual ~Pipeline() = default;
+        virtual ~PipelineT() = default;
 
         [[nodiscard]] virtual PipelineType GetType() const = 0;
     };
 
-    class ShaderModule
+    class ShaderModuleT
     {
     public:
-        virtual ~ShaderModule() = default;
+        virtual ~ShaderModuleT() = default;
 
         [[nodiscard]] virtual ShaderStage GetStage() const = 0;
     };
 
-    class Swapchain
+    class SwapchainT
     {
     public:
-        virtual ~Swapchain() = default;
+        virtual ~SwapchainT() = default;
 
         [[nodiscard]] virtual std::uint32_t GetImageCount() const = 0;
-        [[nodiscard]] virtual Ptr<ImageView> GetImageView(std::uint32_t index) const = 0;
+        [[nodiscard]] virtual ImageView GetImageView(std::uint32_t index) const = 0;
         [[nodiscard]] virtual Extent2D GetExtent() const = 0;
 
-        virtual std::uint32_t AcquireNextImage(Ptr<Fence> fence) = 0;
+        virtual std::uint32_t AcquireNextImage(Fence fence) = 0;
         virtual void Present() const = 0;
     };
 
-    class DescriptorSetLayout
+    class DescriptorSetLayoutT
     {
     public:
-        virtual ~DescriptorSetLayout() = default;
+        virtual ~DescriptorSetLayoutT() = default;
 
         [[nodiscard]] virtual std::uint32_t GetSet() const = 0;
         [[nodiscard]] virtual std::uint32_t GetDescriptorBindingCount() const = 0;
         [[nodiscard]] virtual const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const = 0;
     };
 
-    class DescriptorSet
+    class DescriptorSetT
     {
     public:
-        virtual ~DescriptorSet() = default;
+        virtual ~DescriptorSetT() = default;
 
         virtual void BindBuffer(
             std::uint32_t binding,
-            Ptr<Buffer> buffer) = 0;
+            Buffer buffer) = 0;
 
         virtual void BindBuffer(
             std::uint32_t binding,
-            Ptr<Buffer> buffer,
+            Buffer buffer,
             std::uint32_t offset,
             std::uint32_t size) = 0;
 
         virtual void BindImageView(
             std::uint32_t binding,
-            Ptr<ImageView> image_view,
-            Ptr<Sampler> sampler) = 0;
+            ImageView image_view,
+            Sampler sampler) = 0;
     };
 
-    class CommandBuffer
+    class CommandBufferT
     {
     public:
-        virtual ~CommandBuffer() = default;
+        virtual ~CommandBufferT() = default;
 
         virtual void Begin() = 0;
         virtual void End() = 0;
@@ -199,13 +204,13 @@ namespace glal
         virtual void SetViewport(float x, float y, float w, float h) = 0;
         virtual void SetScissor(int x, int y, int w, int h) = 0;
 
-        virtual void BindPipeline(Ptr<Pipeline> pipeline) = 0;
-        virtual void BindVertexBuffer(Ptr<Buffer> buffer, std::size_t offset) = 0;
-        virtual void BindIndexBuffer(Ptr<Buffer> buffer, DataType type) = 0;
+        virtual void BindPipeline(Pipeline pipeline) = 0;
+        virtual void BindVertexBuffer(Buffer buffer, std::size_t offset) = 0;
+        virtual void BindIndexBuffer(Buffer buffer, DataType type) = 0;
         virtual void BindDescriptorSets(
             std::uint32_t first_set,
             std::uint32_t set_count,
-            Ptr<const Ptr<DescriptorSet>> descriptor_sets) = 0;
+            const DescriptorSet *descriptor_sets) = 0;
 
         virtual void Draw(std::uint32_t vertex_count, std::uint32_t first_vertex) = 0;
         virtual void DrawIndexed(std::uint32_t index_count, std::uint32_t first_index) = 0;
@@ -213,39 +218,40 @@ namespace glal
         virtual void Dispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z) = 0;
 
         virtual void CopyBuffer(
-            Ptr<Buffer> src_buffer,
-            Ptr<Buffer> dst_buffer,
+            Buffer src_buffer,
+            Buffer dst_buffer,
             std::size_t src_offset,
             std::size_t dst_offset,
             std::size_t size) = 0;
-        virtual void CopyBufferToImage(Ptr<Buffer> src_buffer, Ptr<Image> dst_image) = 0;
+        virtual void CopyBufferToImage(Buffer src_buffer, Image dst_image) = 0;
 
-        virtual void Transition(Ptr<Resource> resource, ResourceState state) = 0;
+        virtual void Transition(Resource resource, ResourceState state) = 0;
     };
 
-    class Fence
+    class FenceT
     {
     public:
-        virtual ~Fence() = default;
+        virtual ~FenceT() = default;
 
         virtual void Wait() = 0;
         virtual void Reset() = 0;
     };
 
-    class Queue
+    class QueueT
     {
     public:
-        virtual ~Queue() = default;
+        virtual ~QueueT() = default;
 
         virtual void Submit(
-            Ptr<CommandBuffer> command_buffer,
+            CommandBuffer command_buffer,
             std::uint32_t command_buffer_count,
-            Ptr<Fence> fence) = 0;
+            Fence fence) = 0;
 
-        virtual void Present(Ptr<Swapchain> swapchain) = 0;
+        virtual void Present(Swapchain swapchain) = 0;
     };
 
-    Ptr<Instance> CreateInstanceOpenGL(const InstanceDesc &desc);
+    Instance CreateInstanceOpenGL(const InstanceDesc &desc);
+    Instance CreateInstanceVulkan(const InstanceDesc &desc);
 
-    void DestroyInstance(Ptr<Instance> instance);
+    void DestroyInstance(Instance instance);
 }

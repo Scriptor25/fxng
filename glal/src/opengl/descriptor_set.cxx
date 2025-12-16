@@ -1,17 +1,17 @@
 #include <common/log.hxx>
 #include <glal/opengl.hxx>
 
-glal::opengl::DescriptorSet::DescriptorSet(const Ptr<Device> device, const DescriptorSetDesc &desc)
+glal::opengl::DescriptorSetT::DescriptorSetT(DeviceT *device, const DescriptorSetDesc &desc)
     : m_Device(device),
       m_Layouts(desc.DescriptorSetLayoutCount)
 {
     for (std::uint32_t i = 0; i < desc.DescriptorSetLayoutCount; ++i)
-        m_Layouts.at(i) = dynamic_cast<DescriptorSetLayout *>(desc.DescriptorSetLayouts[i]);
+        m_Layouts.at(i) = dynamic_cast<DescriptorSetLayoutT *>(desc.DescriptorSetLayouts[i]);
 }
 
-void glal::opengl::DescriptorSet::BindBuffer(const std::uint32_t binding, const Ptr<glal::Buffer> buffer)
+void glal::opengl::DescriptorSetT::BindBuffer(const std::uint32_t binding, const Buffer buffer)
 {
-    const auto buffer_impl = dynamic_cast<Ptr<Buffer>>(buffer);
+    const auto buffer_impl = dynamic_cast<BufferT *>(buffer);
 
     GLenum target = 0;
     for (const auto layout : m_Layouts)
@@ -40,13 +40,13 @@ void glal::opengl::DescriptorSet::BindBuffer(const std::uint32_t binding, const 
     };
 }
 
-void glal::opengl::DescriptorSet::BindBuffer(
+void glal::opengl::DescriptorSetT::BindBuffer(
     const std::uint32_t binding,
-    const Ptr<glal::Buffer> buffer,
+    const Buffer buffer,
     const std::uint32_t offset,
     const std::uint32_t size)
 {
-    const auto buffer_impl = dynamic_cast<Ptr<Buffer>>(buffer);
+    const auto buffer_impl = dynamic_cast<BufferT *>(buffer);
 
     GLenum target = 0;
     for (const auto layout : m_Layouts)
@@ -75,13 +75,13 @@ void glal::opengl::DescriptorSet::BindBuffer(
     };
 }
 
-void glal::opengl::DescriptorSet::BindImageView(
+void glal::opengl::DescriptorSetT::BindImageView(
     const std::uint32_t binding,
-    const Ptr<glal::ImageView> image_view,
-    const Ptr<glal::Sampler> sampler)
+    const ImageView image_view,
+    const Sampler sampler)
 {
-    const auto image_view_impl = dynamic_cast<Ptr<ImageView>>(image_view);
-    const auto sampler_impl = dynamic_cast<Ptr<Sampler>>(sampler);
+    const auto image_view_impl = dynamic_cast<ImageViewT *>(image_view);
+    const auto sampler_impl = dynamic_cast<SamplerT *>(sampler);
 
     m_ImageBindings[binding] = {
         .ImageViewImpl = image_view_impl,
@@ -89,7 +89,7 @@ void glal::opengl::DescriptorSet::BindImageView(
     };
 }
 
-void glal::opengl::DescriptorSet::Bind(const std::uint32_t index) const
+void glal::opengl::DescriptorSetT::Bind(const std::uint32_t index) const
 {
     const auto binding_base = index * 8;
 
@@ -111,7 +111,7 @@ void glal::opengl::DescriptorSet::Bind(const std::uint32_t index) const
 
     for (auto &[binding, element] : m_ImageBindings)
     {
-        glBindTextureUnit(binding_base + binding, element.ImageViewImpl->GetHandle());
+        glBindTextureUnit(binding_base + binding, element.ImageViewImpl->GetImageHandle());
         glBindSampler(binding_base + binding, element.SamplerImpl->GetHandle());
     }
 }

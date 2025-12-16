@@ -31,10 +31,20 @@ namespace glal
     struct ImageDesc
     {
         ImageFormat Format;
-        ImageDimension Dimension;
+        ImageType Type;
         Extent3D Extent;
         std::uint32_t MipLevelCount;
         std::uint32_t ArrayLayerCount;
+    };
+
+    /**
+     * Image View Descriptor
+     */
+    struct ImageViewDesc
+    {
+        ImageFormat Format;
+        ImageType Type;
+        Image ImageResource;
     };
 
     /**
@@ -64,7 +74,7 @@ namespace glal
      */
     struct PipelineLayoutDesc
     {
-        DescriptorSetLayout *const*DescriptorSetLayouts;
+        const DescriptorSetLayout *DescriptorSetLayouts;
         std::uint32_t DescriptorSetLayoutCount;
 
         // TODO: push constant ranges
@@ -83,7 +93,7 @@ namespace glal
         const VertexAttribute *VertexAttributes;
         std::uint32_t VertexAttributeCount;
 
-        PipelineLayout *Layout;
+        PipelineLayoutT *Layout;
 
         bool DepthTest;
         bool DepthWrite;
@@ -106,7 +116,7 @@ namespace glal
      */
     struct DescriptorSetDesc
     {
-        DescriptorSetLayout *const*DescriptorSetLayouts;
+        const DescriptorSetLayout *DescriptorSetLayouts;
         std::uint32_t DescriptorSetLayoutCount;
     };
 

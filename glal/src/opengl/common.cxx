@@ -1,16 +1,16 @@
 #include <common/log.hxx>
 #include <glal/opengl.hxx>
 
-glal::Ptr<glal::Instance> glal::CreateInstanceOpenGL(const InstanceDesc &desc)
+glal::Instance glal::CreateInstanceOpenGL(const InstanceDesc &desc)
 {
-    return new opengl::Instance(desc);
+    return new opengl::InstanceT(desc);
 }
 
 void glal::opengl::TranslateImageFormat(
     const ImageFormat image_format,
-    const Ptr<GLenum> internal_format,
-    const Ptr<GLenum> external_format,
-    const Ptr<GLenum> type)
+    GLenum *internal_format,
+    GLenum *external_format,
+    GLenum *type)
 {
     switch (image_format)
     {
@@ -54,19 +54,20 @@ void glal::opengl::TranslateImageFormat(
         external_format && ((*external_format = GL_DEPTH_COMPONENT));
         type && ((*type = GL_FLOAT));
         break;
-    default:
-        common::Fatal("image format not supported");
     }
 }
 
 void glal::opengl::TranslateDataType(
     const DataType data_type,
-    const Ptr<std::uint32_t> size,
-    const Ptr<GLenum> type,
-    const Ptr<GLboolean> normalized)
+    std::uint32_t *size,
+    GLenum *type,
+    GLboolean *normalized)
 {
     switch (data_type)
     {
+    case DataType_None:
+        common::Fatal("data type is not set");
+
     case DataType_UInt8:
         size && ((*size = sizeof(GLubyte)));
         type && ((*type = GL_UNSIGNED_BYTE));
@@ -117,7 +118,5 @@ void glal::opengl::TranslateDataType(
         type && ((*type = GL_DOUBLE));
         normalized && ((*normalized = GL_FALSE));
         break;
-    default:
-        common::Fatal("vertex attribute type not supported");
     }
 }

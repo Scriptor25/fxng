@@ -1,6 +1,6 @@
 #include <glal/opengl.hxx>
 
-glal::opengl::Sampler::Sampler(const Ptr<Device> device, const SamplerDesc &desc)
+glal::opengl::SamplerT::SamplerT(DeviceT *device, const SamplerDesc &desc)
     : m_Device(device),
       m_Handle()
 {
@@ -89,12 +89,12 @@ glal::opengl::Sampler::Sampler(const Ptr<Device> device, const SamplerDesc &desc
     glSamplerParameteri(m_Handle, GL_TEXTURE_WRAP_R, wrap_r);
 }
 
-glal::opengl::Sampler::~Sampler()
+glal::opengl::SamplerT::~SamplerT()
 {
     glDeleteSamplers(1, &m_Handle);
 }
 
-std::uint32_t glal::opengl::Sampler::GetHandle() const
+std::uint32_t glal::opengl::SamplerT::GetHandle() const
 {
     return m_Handle;
 }

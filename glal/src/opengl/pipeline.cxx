@@ -1,9 +1,9 @@
 #include <common/log.hxx>
 #include <glal/opengl.hxx>
 
-glal::opengl::Pipeline::Pipeline(const Ptr<Device> device, const PipelineDesc &desc)
+glal::opengl::PipelineT::PipelineT(DeviceT *device, const PipelineDesc &desc)
     : m_Device(device),
-      m_Layout(dynamic_cast<Ptr<PipelineLayout>>(desc.Layout)),
+      m_Layout(dynamic_cast<PipelineLayoutT *>(desc.Layout)),
       m_Type(desc.Type),
       m_VertexAttributes(desc.VertexAttributeCount),
       m_VertexStride()
@@ -29,7 +29,7 @@ glal::opengl::Pipeline::Pipeline(const Ptr<Device> device, const PipelineDesc &d
     for (std::uint32_t i = 0; i < desc.StageCount; ++i)
     {
         const auto stage = desc.Stages + i;
-        const auto shader_module_impl = dynamic_cast<Ptr<ShaderModule>>(stage->Module);
+        const auto shader_module_impl = dynamic_cast<ShaderModuleT *>(stage->Module);
 
         glAttachShader(m_Handle, shader_module_impl->GetHandle());
     }
@@ -63,22 +63,22 @@ glal::opengl::Pipeline::Pipeline(const Ptr<Device> device, const PipelineDesc &d
     }
 }
 
-glal::opengl::Pipeline::~Pipeline()
+glal::opengl::PipelineT::~PipelineT()
 {
     glDeleteProgram(m_Handle);
 }
 
-glal::PipelineType glal::opengl::Pipeline::GetType() const
+glal::PipelineType glal::opengl::PipelineT::GetType() const
 {
     return m_Type;
 }
 
-std::uint32_t glal::opengl::Pipeline::GetVertexStride() const
+std::uint32_t glal::opengl::PipelineT::GetVertexStride() const
 {
     return m_VertexStride;
 }
 
-void glal::opengl::Pipeline::LayoutVertexArray(const std::uint32_t vertex_array) const
+void glal::opengl::PipelineT::LayoutVertexArray(const std::uint32_t vertex_array) const
 {
     for (auto &vertex_attribute : m_VertexAttributes)
     {
@@ -99,7 +99,7 @@ void glal::opengl::Pipeline::LayoutVertexArray(const std::uint32_t vertex_array)
     }
 }
 
-std::uint32_t glal::opengl::Pipeline::GetHandle() const
+std::uint32_t glal::opengl::PipelineT::GetHandle() const
 {
     return m_Handle;
 }

@@ -1,7 +1,7 @@
 #include <common/log.hxx>
 #include <glal/opengl.hxx>
 
-glal::opengl::Buffer::Buffer(const Ptr<Device> device, const BufferDesc &desc)
+glal::opengl::BufferT::BufferT(DeviceT *device, const BufferDesc &desc)
     : m_Device(device),
       m_Size(desc.Size),
       m_Usage(desc.Usage),
@@ -17,7 +17,7 @@ glal::opengl::Buffer::Buffer(const Ptr<Device> device, const BufferDesc &desc)
     case MemoryUsage_DeviceToHost:
         flags = GL_MAP_READ_BIT;
         break;
-    default:
+    case MemoryUsage_DeviceLocal:
         flags = 0;
         break;
     }
@@ -26,22 +26,22 @@ glal::opengl::Buffer::Buffer(const Ptr<Device> device, const BufferDesc &desc)
     glNamedBufferStorage(m_Handle, static_cast<GLsizeiptr>(m_Size), nullptr, flags);
 }
 
-glal::opengl::Buffer::~Buffer()
+glal::opengl::BufferT::~BufferT()
 {
     glDeleteBuffers(1, &m_Handle);
 }
 
-std::size_t glal::opengl::Buffer::GetSize() const
+std::size_t glal::opengl::BufferT::GetSize() const
 {
     return m_Size;
 }
 
-glal::BufferUsage glal::opengl::Buffer::GetUsage() const
+glal::BufferUsage glal::opengl::BufferT::GetUsage() const
 {
     return m_Usage;
 }
 
-void *glal::opengl::Buffer::Map()
+void *glal::opengl::BufferT::Map()
 {
     GLenum access;
     switch (m_Memory)
@@ -52,19 +52,19 @@ void *glal::opengl::Buffer::Map()
     case MemoryUsage_DeviceToHost:
         access = GL_READ_ONLY;
         break;
-    default:
-        common::Fatal("memory usage not supported");
+    case MemoryUsage_DeviceLocal:
+        common::Fatal("device local memory not accessible");
     }
 
     return glMapNamedBuffer(m_Handle, access);
 }
 
-void glal::opengl::Buffer::Unmap()
+void glal::opengl::BufferT::Unmap()
 {
     glUnmapNamedBuffer(m_Handle);
 }
 
-std::uint32_t glal::opengl::Buffer::GetHandle() const
+std::uint32_t glal::opengl::BufferT::GetHandle() const
 {
     return m_Handle;
 }

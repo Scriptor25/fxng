@@ -1,6 +1,6 @@
 #include <glal/opengl.hxx>
 
-glal::opengl::PhysicalDevice::PhysicalDevice(const Ptr<Instance> instance)
+glal::opengl::PhysicalDeviceT::PhysicalDeviceT(InstanceT *instance)
     : m_Instance(instance),
       m_Limits()
 {
@@ -12,18 +12,18 @@ glal::opengl::PhysicalDevice::PhysicalDevice(const Ptr<Instance> instance)
     m_Limits.MaxBufferSize = 1ull << 30;
 }
 
-glal::opengl::PhysicalDevice::~PhysicalDevice()
+glal::opengl::PhysicalDeviceT::~PhysicalDeviceT()
 {
     for (const auto device : m_Devices)
         delete device;
 }
 
-glal::Ptr<glal::Device> glal::opengl::PhysicalDevice::CreateDevice()
+glal::Device glal::opengl::PhysicalDeviceT::CreateDevice()
 {
-    return m_Devices.emplace_back(new Device(this));
+    return m_Devices.emplace_back(new DeviceT(this));
 }
 
-void glal::opengl::PhysicalDevice::DestroyDevice(const Ptr<glal::Device> device)
+void glal::opengl::PhysicalDeviceT::DestroyDevice(const Device device)
 {
     for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it)
         if (*it == device)
@@ -34,14 +34,14 @@ void glal::opengl::PhysicalDevice::DestroyDevice(const Ptr<glal::Device> device)
         }
 }
 
-bool glal::opengl::PhysicalDevice::Supports(const DeviceFeature feature) const
+bool glal::opengl::PhysicalDeviceT::Supports(const DeviceFeature feature) const
 {
     return feature == DeviceFeature_GeometryShader
            || feature == DeviceFeature_Tessellation
            || feature == DeviceFeature_Compute;
 }
 
-const glal::DeviceLimits &glal::opengl::PhysicalDevice::GetLimits() const
+const glal::DeviceLimits &glal::opengl::PhysicalDeviceT::GetLimits() const
 {
     return m_Limits;
 }

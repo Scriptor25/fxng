@@ -94,9 +94,9 @@ static void gl_debug_message_callback(
     common::Log(log_level, "[GL] {} {} {}: {}", source_string, type_string, id, message);
 }
 
-glal::opengl::Instance::Instance(const InstanceDesc &desc)
+glal::opengl::InstanceT::InstanceT(const InstanceDesc &desc)
 {
-    glewContextInit();
+    glewInit();
 
     if (desc.EnableValidation)
     {
@@ -105,21 +105,12 @@ glal::opengl::Instance::Instance(const InstanceDesc &desc)
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     }
 
-    m_PhysicalDevices = new PhysicalDevice[1]{ PhysicalDevice(this) };
-    m_PhysicalDeviceCount = 1;
+    m_PhysicalDevices.push_back(PhysicalDeviceT(this));
 }
 
-glal::opengl::Instance::~Instance()
-{
-    delete[] m_PhysicalDevices;
-
-    m_PhysicalDevices = nullptr;
-    m_PhysicalDeviceCount = 0;
-}
-
-std::uint32_t glal::opengl::Instance::EnumeratePhysicalDevices(const Ptr<Ptr<glal::PhysicalDevice>> devices)
+std::uint32_t glal::opengl::InstanceT::EnumeratePhysicalDevices(PhysicalDevice *devices)
 {
     if (devices)
-        *devices = m_PhysicalDevices;
-    return m_PhysicalDeviceCount;
+        *devices = m_PhysicalDevices.data();
+    return m_PhysicalDevices.size();
 }

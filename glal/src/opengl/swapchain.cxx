@@ -3,71 +3,84 @@
 #include <glal/opengl.hxx>
 #include <GLFW/glfw3.h>
 
-glal::opengl::Swapchain::Swapchain(const Ptr<Device> device, const SwapchainDesc &desc)
+glal::opengl::SwapchainT::SwapchainT(DeviceT *device, const SwapchainDesc &desc)
     : m_Device(device),
       m_Extent(desc.Extent),
-      m_ImageCount(desc.ImageCount),
-      m_ImageIndex(),
-      m_Images(desc.ImageCount),
-      m_Fences(desc.ImageCount),
-      m_ImageViews(desc.ImageCount),
+      m_FrameCount(desc.ImageCount),
+      m_FrameIndex(),
+      m_Frames(desc.ImageCount),
       m_NativeWindowHandle(desc.NativeWindowHandle)
 {
-    for (std::uint32_t i = 0; i < m_ImageCount; ++i)
+    for (std::uint32_t i = 0; i < m_FrameCount; ++i)
     {
         const auto image = device->CreateImage(
             {
                 .Format = desc.Format,
-                .Dimension = ImageDimension_2D,
+                .Type = ImageType_2D,
                 .Extent = { m_Extent.Width, m_Extent.Height, 0 },
                 .MipLevelCount = 1,
                 .ArrayLayerCount = 1,
             });
-        const auto image_impl = dynamic_cast<Ptr<Image>>(image);
-        m_Images[i] = image_impl;
-        m_ImageViews[i] = new ImageView(image_impl);
+        const auto image_view = device->CreateImageView(
+            {
+                .Format = desc.Format,
+                .Type = ImageType_2D,
+                .ImageResource = image,
+            });
+        m_Frames[i] = {
+            .ImageRef = dynamic_cast<ImageT *>(image),
+            .ImageViewRef = dynamic_cast<ImageViewT *>(image_view),
+            .FenceRef = nullptr,
+        };
     }
 }
 
-glal::opengl::Swapchain::~Swapchain()
+glal::opengl::SwapchainT::~SwapchainT()
 {
-    for (const auto image_view : m_ImageViews)
-        delete image_view;
+    for (const auto frame : m_Frames)
+    {
+        m_Device->DestroyImageView(frame.ImageViewRef);
+        m_Device->DestroyImage(frame.ImageRef);
+    }
 }
 
-glal::Extent2D glal::opengl::Swapchain::GetExtent() const
+glal::Extent2D glal::opengl::SwapchainT::GetExtent() const
 {
     return m_Extent;
 }
 
-std::uint32_t glal::opengl::Swapchain::GetImageCount() const
+std::uint32_t glal::opengl::SwapchainT::GetImageCount() const
 {
-    return m_ImageCount;
+    return m_FrameCount;
 }
 
-glal::Ptr<glal::ImageView> glal::opengl::Swapchain::GetImageView(const std::uint32_t index) const
+glal::ImageView glal::opengl::SwapchainT::GetImageView(const std::uint32_t index) const
 {
-    return m_ImageViews.at(index);
+    return m_Frames.at(index).ImageViewRef;
 }
 
-std::uint32_t glal::opengl::Swapchain::AcquireNextImage(const Ptr<glal::Fence> fence)
+std::uint32_t glal::opengl::SwapchainT::AcquireNextImage(const Fence fence)
 {
-    m_ImageIndex = (m_ImageIndex + 1) % m_ImageCount;
+    m_FrameIndex = (m_FrameIndex + 1) % m_FrameCount;
 
-    if (const auto in_flight = m_Fences.at(m_ImageIndex))
+    if (const auto in_flight = m_Frames.at(m_FrameIndex).FenceRef)
         in_flight->Wait();
 
-    m_Fences.at(m_ImageIndex) = fence;
-    return m_ImageIndex;
+    m_Frames.at(m_FrameIndex).FenceRef = dynamic_cast<FenceT *>(fence);
+    return m_FrameIndex;
 }
 
-void glal::opengl::Swapchain::Present() const
+void glal::opengl::SwapchainT::Present() const
 {
-    const auto image_view = m_ImageViews.at(m_ImageIndex);
+    const auto image = m_Frames.at(m_FrameIndex).ImageRef;
 
     GLuint framebuffer;
     glCreateFramebuffers(1, &framebuffer);
-    glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0, image_view->GetHandle(), 0);
+    glNamedFramebufferTexture(
+        framebuffer,
+        GL_COLOR_ATTACHMENT0,
+        image->GetHandle(),
+        0);
     glBlitNamedFramebuffer(
         framebuffer,
         0,

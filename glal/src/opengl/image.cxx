@@ -1,10 +1,10 @@
 #include <common/log.hxx>
 #include <glal/opengl.hxx>
 
-glal::opengl::Image::Image(const Ptr<Device> device, const ImageDesc &desc)
+glal::opengl::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
     : m_Device(device),
       m_Format(desc.Format),
-      m_Dimension(desc.Dimension),
+      m_Type(desc.Type),
       m_Extent(desc.Extent),
       m_MipLevelCount(desc.MipLevelCount),
       m_ArrayLayerCount(desc.ArrayLayerCount),
@@ -13,9 +13,9 @@ glal::opengl::Image::Image(const Ptr<Device> device, const ImageDesc &desc)
     GLenum internal_format, external_format, type;
     TranslateImageFormat(m_Format, &internal_format, &external_format, &type);
 
-    switch (m_Dimension)
+    switch (m_Type)
     {
-    case ImageDimension_1D:
+    case ImageType_1D:
         glCreateTextures(GL_TEXTURE_1D, 1, &m_Handle);
         glTextureStorage1D(
             m_Handle,
@@ -31,7 +31,7 @@ glal::opengl::Image::Image(const Ptr<Device> device, const ImageDesc &desc)
             type,
             nullptr);
         break;
-    case ImageDimension_2D:
+    case ImageType_2D:
         glCreateTextures(GL_TEXTURE_2D, 1, &m_Handle);
         glTextureStorage2D(
             m_Handle,
@@ -50,7 +50,7 @@ glal::opengl::Image::Image(const Ptr<Device> device, const ImageDesc &desc)
             type,
             nullptr);
         break;
-    case ImageDimension_3D:
+    case ImageType_3D:
         glCreateTextures(GL_TEXTURE_3D, 1, &m_Handle);
         glTextureStorage3D(
             m_Handle,
@@ -72,42 +72,40 @@ glal::opengl::Image::Image(const Ptr<Device> device, const ImageDesc &desc)
             type,
             nullptr);
         break;
-    default:
-        common::Fatal("image dimension not supported");
     }
 }
 
-glal::opengl::Image::~Image()
+glal::opengl::ImageT::~ImageT()
 {
     glDeleteTextures(1, &m_Handle);
 }
 
-glal::ImageFormat glal::opengl::Image::GetFormat() const
+glal::ImageFormat glal::opengl::ImageT::GetFormat() const
 {
     return m_Format;
 }
 
-glal::ImageDimension glal::opengl::Image::GetDimension() const
+glal::ImageType glal::opengl::ImageT::GetType() const
 {
-    return m_Dimension;
+    return m_Type;
 }
 
-glal::Extent3D glal::opengl::Image::GetExtent() const
+glal::Extent3D glal::opengl::ImageT::GetExtent() const
 {
     return m_Extent;
 }
 
-std::uint32_t glal::opengl::Image::GetMipLevelCount() const
+std::uint32_t glal::opengl::ImageT::GetMipLevelCount() const
 {
     return m_MipLevelCount;
 }
 
-std::uint32_t glal::opengl::Image::GetArrayLayerCount() const
+std::uint32_t glal::opengl::ImageT::GetArrayLayerCount() const
 {
     return m_ArrayLayerCount;
 }
 
-std::uint32_t glal::opengl::Image::GetHandle() const
+std::uint32_t glal::opengl::ImageT::GetHandle() const
 {
     return m_Handle;
 }

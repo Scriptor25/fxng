@@ -7,163 +7,149 @@
 
 namespace glal::opengl
 {
-    class Instance;
-    class PhysicalDevice;
-    class Device;
+    class InstanceT;
+    class PhysicalDeviceT;
+    class DeviceT;
 
-    class Buffer;
-    class Image;
-    class ImageView;
-    class Sampler;
-    class ShaderModule;
-    class PipelineLayout;
-    class Pipeline;
-    class DescriptorSetLayout;
-    class DescriptorSet;
-    class Swapchain;
-    class CommandBuffer;
-    class Fence;
-    class Queue;
+    class BufferT;
+    class ImageT;
+    class ImageViewT;
+    class SamplerT;
+    class ShaderModuleT;
+    class PipelineLayoutT;
+    class PipelineT;
+    class DescriptorSetLayoutT;
+    class DescriptorSetT;
+    class SwapchainT;
+    class CommandBufferT;
+    class FenceT;
+    class QueueT;
 
-    class Instance final : public glal::Instance
+    class InstanceT final : public glal::InstanceT
     {
     public:
-        explicit Instance(const InstanceDesc &desc);
-        ~Instance() override;
+        explicit InstanceT(const InstanceDesc &desc);
 
-        std::uint32_t EnumeratePhysicalDevices(Ptr<Ptr<glal::PhysicalDevice>> devices) override;
+        std::uint32_t EnumeratePhysicalDevices(PhysicalDevice *devices) override;
 
     private:
-        Ptr<PhysicalDevice> m_PhysicalDevices;
-        std::uint32_t m_PhysicalDeviceCount;
+        Vec<PhysicalDeviceT> m_PhysicalDevices;
     };
 
-    class PhysicalDevice final : public glal::PhysicalDevice
+    class PhysicalDeviceT final : public glal::PhysicalDeviceT
     {
-        friend Instance;
-
     public:
-        ~PhysicalDevice() override;
+        explicit PhysicalDeviceT(InstanceT *instance);
+        ~PhysicalDeviceT() override;
 
-        Ptr<glal::Device> CreateDevice() override;
-        void DestroyDevice(Ptr<glal::Device> device) override;
+        Device CreateDevice() override;
+        void DestroyDevice(Device device) override;
 
         [[nodiscard]] bool Supports(DeviceFeature feature) const override;
         [[nodiscard]] const DeviceLimits &GetLimits() const override;
 
-    protected:
-        explicit PhysicalDevice(Ptr<Instance> instance);
-
     private:
-        Ptr<Instance> m_Instance;
+        InstanceT *m_Instance;
         DeviceLimits m_Limits;
 
-        std::vector<Ptr<Device>> m_Devices;
+        std::vector<DeviceT *> m_Devices;
     };
 
-    class Device final : public glal::Device
+    class DeviceT final : public glal::DeviceT
     {
-        friend PhysicalDevice;
-
     public:
-        ~Device() override;
+        explicit DeviceT(PhysicalDeviceT *physical_device);
+        ~DeviceT() override;
 
-        Ptr<glal::Buffer> CreateBuffer(const BufferDesc &desc) override;
-        void DestroyBuffer(Ptr<glal::Buffer> buffer) override;
+        Buffer CreateBuffer(const BufferDesc &desc) override;
+        void DestroyBuffer(Buffer buffer) override;
 
-        Ptr<glal::Image> CreateImage(const ImageDesc &desc) override;
-        void DestroyImage(Ptr<glal::Image> image) override;
+        Image CreateImage(const ImageDesc &desc) override;
+        void DestroyImage(Image image) override;
 
-        Ptr<glal::Sampler> CreateSampler(const SamplerDesc &desc) override;
-        void DestroySampler(Ptr<glal::Sampler> sampler) override;
+        ImageView CreateImageView(const ImageViewDesc &desc) override;
+        void DestroyImageView(ImageView image_view) override;
 
-        Ptr<glal::ShaderModule> CreateShaderModule(const ShaderModuleDesc &desc) override;
-        void DestroyShaderModule(Ptr<glal::ShaderModule> shader_module) override;
+        Sampler CreateSampler(const SamplerDesc &desc) override;
+        void DestroySampler(Sampler sampler) override;
 
-        Ptr<glal::PipelineLayout> CreatePipelineLayout(const PipelineLayoutDesc &desc) override;
-        void DestroyPipelineLayout(Ptr<glal::PipelineLayout> pipeline_layout) override;
+        ShaderModule CreateShaderModule(const ShaderModuleDesc &desc) override;
+        void DestroyShaderModule(ShaderModule shader_module) override;
 
-        Ptr<glal::Pipeline> CreatePipeline(const PipelineDesc &desc) override;
-        void DestroyPipeline(Ptr<glal::Pipeline> pipeline) override;
+        PipelineLayout CreatePipelineLayout(const PipelineLayoutDesc &desc) override;
+        void DestroyPipelineLayout(PipelineLayout pipeline_layout) override;
 
-        Ptr<glal::DescriptorSetLayout> CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc) override;
-        void DestroyDescriptorSetLayout(Ptr<glal::DescriptorSetLayout> descriptor_set_layout) override;
+        Pipeline CreatePipeline(const PipelineDesc &desc) override;
+        void DestroyPipeline(Pipeline pipeline) override;
 
-        Ptr<glal::DescriptorSet> CreateDescriptorSet(const DescriptorSetDesc &desc) override;
-        void DestroyDescriptorSet(Ptr<glal::DescriptorSet> descriptor_set) override;
+        DescriptorSetLayout CreateDescriptorSetLayout(const DescriptorSetLayoutDesc &desc) override;
+        void DestroyDescriptorSetLayout(DescriptorSetLayout descriptor_set_layout) override;
 
-        Ptr<glal::Swapchain> CreateSwapchain(const SwapchainDesc &desc) override;
-        void DestroySwapchain(Ptr<glal::Swapchain> swapchain) override;
+        DescriptorSet CreateDescriptorSet(const DescriptorSetDesc &desc) override;
+        void DestroyDescriptorSet(DescriptorSet descriptor_set) override;
 
-        Ptr<glal::CommandBuffer> CreateCommandBuffer(CommandBufferUsage usage) override;
-        void DestroyCommandBuffer(Ptr<glal::CommandBuffer> command_buffer) override;
+        Swapchain CreateSwapchain(const SwapchainDesc &desc) override;
+        void DestroySwapchain(Swapchain swapchain) override;
 
-        Ptr<glal::Fence> CreateFence() override;
-        void DestroyFence(Ptr<glal::Fence> fence) override;
+        CommandBuffer CreateCommandBuffer(CommandBufferUsage usage) override;
+        void DestroyCommandBuffer(CommandBuffer command_buffer) override;
 
-        Ptr<glal::Queue> GetQueue(QueueType type) override;
+        Fence CreateFence() override;
+        void DestroyFence(Fence fence) override;
+
+        Queue GetQueue(QueueType type) override;
 
         [[nodiscard]] bool Supports(DeviceFeature feature) const override;
         [[nodiscard]] const DeviceLimits &GetLimits() const override;
 
-    protected:
-        explicit Device(Ptr<PhysicalDevice> physical_device);
-
     private:
-        Ptr<PhysicalDevice> m_PhysicalDevice;
+        PhysicalDeviceT *m_PhysicalDevice;
 
-        std::vector<Ptr<Buffer>> m_Buffers;
-        std::vector<Ptr<Image>> m_Images;
-        std::vector<Ptr<Sampler>> m_Samplers;
-        std::vector<Ptr<ShaderModule>> m_ShaderModules;
-        std::vector<Ptr<PipelineLayout>> m_PipelineLayouts;
-        std::vector<Ptr<Pipeline>> m_Pipelines;
-        std::vector<Ptr<DescriptorSetLayout>> m_DescriptorSetLayouts;
-        std::vector<Ptr<DescriptorSet>> m_DescriptorSets;
-        std::vector<Ptr<Swapchain>> m_Swapchains;
-        std::vector<Ptr<CommandBuffer>> m_CommandBuffers;
-        std::vector<Ptr<Fence>> m_Fences;
+        std::vector<BufferT *> m_Buffers;
+        std::vector<ImageT *> m_Images;
+        std::vector<ImageViewT *> m_ImageViews;
+        std::vector<SamplerT *> m_Samplers;
+        std::vector<ShaderModuleT *> m_ShaderModules;
+        std::vector<PipelineLayoutT *> m_PipelineLayouts;
+        std::vector<PipelineT *> m_Pipelines;
+        std::vector<DescriptorSetLayoutT *> m_DescriptorSetLayouts;
+        std::vector<DescriptorSetT *> m_DescriptorSets;
+        std::vector<SwapchainT *> m_Swapchains;
+        std::vector<CommandBufferT *> m_CommandBuffers;
+        std::vector<FenceT *> m_Fences;
 
-        Ptr<Queue> m_Queue;
+        QueueT *m_Queue;
     };
 
-    class Queue final : public glal::Queue
+    class QueueT final : public glal::QueueT
     {
-        friend Device;
-
     public:
+        explicit QueueT(DeviceT *device);
+
         void Submit(
-            Ptr<glal::CommandBuffer> command_buffer,
+            CommandBuffer command_buffer,
             std::uint32_t command_buffer_count,
-            Ptr<glal::Fence> fence) override;
-        void Present(Ptr<glal::Swapchain> swapchain) override;
-
-    protected:
-        explicit Queue(Ptr<Device> device);
+            Fence fence) override;
+        void Present(Swapchain swapchain) override;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
     };
 
-    class DescriptorSetLayout final : public glal::DescriptorSetLayout
+    class DescriptorSetLayoutT final : public glal::DescriptorSetLayoutT
     {
-        friend Device;
-        friend Pipeline;
-        friend DescriptorSet;
-
     public:
+        explicit DescriptorSetLayoutT(DeviceT *device, const DescriptorSetLayoutDesc &desc);
+
         [[nodiscard]] std::uint32_t GetSet() const override;
         [[nodiscard]] std::uint32_t GetDescriptorBindingCount() const override;
         [[nodiscard]] const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const override;
-
-    protected:
-        explicit DescriptorSetLayout(Ptr<Device> device, const DescriptorSetLayoutDesc &desc);
 
         [[nodiscard]] std::vector<DescriptorBinding>::const_iterator begin() const;
         [[nodiscard]] std::vector<DescriptorBinding>::const_iterator end() const;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
         std::uint32_t m_Set;
         std::vector<DescriptorBinding> m_DescriptorBindings;
@@ -172,7 +158,7 @@ namespace glal::opengl
     struct BufferBinding
     {
         GLenum Target;
-        Ptr<const Buffer> BufferImpl;
+        BufferT *BufferImpl;
         bool Base;
         GLsizeiptr Offset;
         GLintptr Size;
@@ -180,49 +166,45 @@ namespace glal::opengl
 
     struct ImageBinding
     {
-        Ptr<const ImageView> ImageViewImpl;
-        Ptr<const Sampler> SamplerImpl;
+        ImageViewT *ImageViewImpl;
+        SamplerT *SamplerImpl;
     };
 
-    class DescriptorSet final : public glal::DescriptorSet
+    class DescriptorSetT final : public glal::DescriptorSetT
     {
-        friend Device;
-        friend CommandBuffer;
-
     public:
-        void BindBuffer(
-            std::uint32_t binding,
-            Ptr<glal::Buffer> buffer) override;
+        explicit DescriptorSetT(DeviceT *device, const DescriptorSetDesc &desc);
 
         void BindBuffer(
             std::uint32_t binding,
-            Ptr<glal::Buffer> buffer,
+            Buffer buffer) override;
+
+        void BindBuffer(
+            std::uint32_t binding,
+            Buffer buffer,
             std::uint32_t offset,
             std::uint32_t size) override;
 
         void BindImageView(
             std::uint32_t binding,
-            Ptr<glal::ImageView> image_view,
-            Ptr<glal::Sampler> sampler) override;
-
-    protected:
-        explicit DescriptorSet(Ptr<Device> device, const DescriptorSetDesc &desc);
+            ImageView image_view,
+            Sampler sampler) override;
 
         void Bind(std::uint32_t index) const;
 
     private:
-        Ptr<Device> m_Device;
-        std::vector<Ptr<DescriptorSetLayout>> m_Layouts;
+        DeviceT *m_Device;
+        std::vector<DescriptorSetLayoutT *> m_Layouts;
 
         std::unordered_map<GLuint, BufferBinding> m_BufferBindings;
         std::unordered_map<GLuint, ImageBinding> m_ImageBindings;
     };
 
-    class CommandBuffer final : public glal::CommandBuffer
+    class CommandBufferT final : public glal::CommandBufferT
     {
-        friend Device;
-
     public:
+        explicit CommandBufferT(DeviceT *device, CommandBufferUsage usage);
+
         void Begin() override;
         void End() override;
 
@@ -232,13 +214,13 @@ namespace glal::opengl
         void SetViewport(float x, float y, float w, float h) override;
         void SetScissor(int x, int y, int w, int h) override;
 
-        void BindPipeline(Ptr<glal::Pipeline> pipeline) override;
-        void BindVertexBuffer(Ptr<glal::Buffer> buffer, std::size_t offset) override;
-        void BindIndexBuffer(Ptr<glal::Buffer> buffer, DataType type) override;
+        void BindPipeline(Pipeline pipeline) override;
+        void BindVertexBuffer(Buffer buffer, std::size_t offset) override;
+        void BindIndexBuffer(Buffer buffer, DataType type) override;
         void BindDescriptorSets(
             std::uint32_t first_set,
             std::uint32_t set_count,
-            Ptr<const Ptr<glal::DescriptorSet>> descriptor_sets) override;
+            const DescriptorSet *descriptor_sets) override;
 
         void Draw(std::uint32_t vertex_count, std::uint32_t first_vertex) override;
         void DrawIndexed(std::uint32_t index_count, std::uint32_t first_index) override;
@@ -246,23 +228,20 @@ namespace glal::opengl
         void Dispatch(std::uint32_t x, std::uint32_t y, std::uint32_t z) override;
 
         void CopyBuffer(
-            Ptr<glal::Buffer> src_buffer,
-            Ptr<glal::Buffer> dst_buffer,
+            Buffer src_buffer,
+            Buffer dst_buffer,
             std::size_t src_offset,
             std::size_t dst_offset,
             std::size_t size) override;
-        void CopyBufferToImage(Ptr<glal::Buffer> src_buffer, Ptr<glal::Image> dst_image) override;
+        void CopyBufferToImage(Buffer src_buffer, Image dst_image) override;
 
-        void Transition(Ptr<Resource> resource, ResourceState state) override;
-
-    protected:
-        explicit CommandBuffer(Ptr<Device> device, CommandBufferUsage usage);
+        void Transition(Resource resource, ResourceState state) override;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
         CommandBufferUsage m_Usage;
 
-        Ptr<Pipeline> m_Pipeline;
+        PipelineT *m_Pipeline;
 
         std::uint32_t m_VertexArray;
         std::uint32_t m_Framebuffer;
@@ -270,30 +249,24 @@ namespace glal::opengl
         DataType m_IndexType;
     };
 
-    class Fence final : public glal::Fence
+    class FenceT final : public glal::FenceT
     {
-        friend Device;
-
     public:
+        explicit FenceT(DeviceT *device);
+
         void Wait() override;
         void Reset() override;
 
-    protected:
-        explicit Fence(Ptr<Device> device);
-
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
         GLsync m_Sync;
     };
 
-    class Buffer final : public glal::Buffer
+    class BufferT final : public glal::BufferT
     {
-        friend Device;
-        friend CommandBuffer;
-        friend DescriptorSet;
-
     public:
-        ~Buffer() override;
+        explicit BufferT(DeviceT *device, const BufferDesc &desc);
+        ~BufferT() override;
 
         [[nodiscard]] std::size_t GetSize() const override;
         [[nodiscard]] BufferUsage GetUsage() const override;
@@ -301,13 +274,10 @@ namespace glal::opengl
         void *Map() override;
         void Unmap() override;
 
-    protected:
-        explicit Buffer(Ptr<Device> device, const BufferDesc &desc);
-
         [[nodiscard]] std::uint32_t GetHandle() const;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
         std::size_t m_Size;
         BufferUsage m_Usage;
@@ -316,32 +286,25 @@ namespace glal::opengl
         std::uint32_t m_Handle;
     };
 
-    class Image final : public glal::Image
+    class ImageT final : public glal::ImageT
     {
-        friend Device;
-        friend CommandBuffer;
-        friend ImageView;
-        friend Swapchain;
-
     public:
-        ~Image() override;
+        explicit ImageT(DeviceT *device, const ImageDesc &desc);
+        ~ImageT() override;
 
         [[nodiscard]] ImageFormat GetFormat() const override;
-        [[nodiscard]] ImageDimension GetDimension() const override;
+        [[nodiscard]] ImageType GetType() const override;
         [[nodiscard]] Extent3D GetExtent() const override;
         [[nodiscard]] std::uint32_t GetMipLevelCount() const override;
         [[nodiscard]] std::uint32_t GetArrayLayerCount() const override;
 
-    protected:
-        explicit Image(Ptr<Device> device, const ImageDesc &desc);
-
         [[nodiscard]] std::uint32_t GetHandle() const;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
         ImageFormat m_Format;
-        ImageDimension m_Dimension;
+        ImageType m_Type;
         Extent3D m_Extent;
         std::uint32_t m_MipLevelCount;
         std::uint32_t m_ArrayLayerCount;
@@ -349,130 +312,112 @@ namespace glal::opengl
         std::uint32_t m_Handle;
     };
 
-    class ImageView final : public glal::ImageView
+    class ImageViewT final : public glal::ImageViewT
     {
-        friend CommandBuffer;
-        friend Swapchain;
-        friend DescriptorSet;
-
     public:
-        [[nodiscard]] Ptr<glal::Image> GetImage() const override;
+        explicit ImageViewT(DeviceT *device, const ImageViewDesc &desc);
 
-    protected:
-        explicit ImageView(Ptr<Image> image);
+        [[nodiscard]] Image GetImage() const override;
+        [[nodiscard]] ImageFormat GetFormat() const override;
+        [[nodiscard]] ImageType GetType() const override;
 
-        [[nodiscard]] std::uint32_t GetHandle() const;
+        std::uint32_t GetImageHandle() const;
 
     private:
-        Ptr<Image> m_Image;
+        DeviceT *m_Device;
+        ImageT *m_Image;
+
+        ImageFormat m_Format;
+        ImageType m_Type;
     };
 
-    class Sampler final : public glal::Sampler
+    class SamplerT final : public glal::SamplerT
     {
-        friend Device;
-        friend CommandBuffer;
-        friend DescriptorSet;
-
     public:
-        ~Sampler() override;
-
-    protected:
-        explicit Sampler(Ptr<Device> device, const SamplerDesc &desc);
+        explicit SamplerT(DeviceT *device, const SamplerDesc &desc);
+        ~SamplerT() override;
 
         [[nodiscard]] std::uint32_t GetHandle() const;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
         std::uint32_t m_Handle;
     };
 
-    class Swapchain final : public glal::Swapchain
+    class SwapchainT final : public glal::SwapchainT
     {
-        friend Device;
+        struct Frame
+        {
+            ImageT *ImageRef;
+            ImageViewT *ImageViewRef;
+            FenceT *FenceRef;
+        };
 
     public:
-        ~Swapchain() override;
+        explicit SwapchainT(DeviceT *device, const SwapchainDesc &desc);
+        ~SwapchainT() override;
 
         [[nodiscard]] std::uint32_t GetImageCount() const override;
-        [[nodiscard]] Ptr<glal::ImageView> GetImageView(std::uint32_t index) const override;
+        [[nodiscard]] ImageView GetImageView(std::uint32_t index) const override;
         [[nodiscard]] Extent2D GetExtent() const override;
 
-        std::uint32_t AcquireNextImage(Ptr<glal::Fence> fence) override;
+        std::uint32_t AcquireNextImage(Fence fence) override;
         void Present() const override;
 
-    protected:
-        explicit Swapchain(Ptr<Device> device, const SwapchainDesc &desc);
-
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
         Extent2D m_Extent;
-        std::uint32_t m_ImageCount;
-        std::uint32_t m_ImageIndex;
-        std::vector<Ptr<Image>> m_Images;
-        std::vector<Ptr<glal::Fence>> m_Fences;
-        std::vector<ImageView *> m_ImageViews;
+        std::uint32_t m_FrameCount;
+        std::uint32_t m_FrameIndex;
+        std::vector<Frame> m_Frames;
 
         void *m_NativeWindowHandle;
     };
 
-    class ShaderModule final : public glal::ShaderModule
+    class ShaderModuleT final : public glal::ShaderModuleT
     {
-        friend Device;
-        friend Pipeline;
-
     public:
-        ~ShaderModule() override;
+        explicit ShaderModuleT(DeviceT *device, const ShaderModuleDesc &desc);
+        ~ShaderModuleT() override;
 
         [[nodiscard]] ShaderStage GetStage() const override;
-
-    protected:
-        explicit ShaderModule(Ptr<Device> device, const ShaderModuleDesc &desc);
 
         [[nodiscard]] std::uint32_t GetHandle() const;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
         ShaderStage m_Stage;
 
         std::uint32_t m_Handle;
     };
 
-    class PipelineLayout final : public glal::PipelineLayout
+    class PipelineLayoutT final : public glal::PipelineLayoutT
     {
-        friend Device;
-        friend Pipeline;
-
     public:
-        [[nodiscard]] Ptr<glal::DescriptorSetLayout> GetDescriptorSetLayout(std::uint32_t index) const override;
+        explicit PipelineLayoutT(DeviceT *device, const PipelineLayoutDesc &desc);
+
+        [[nodiscard]] DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const override;
         [[nodiscard]] std::uint32_t GetDescriptorSetLayoutCount() const override;
 
-    protected:
-        explicit PipelineLayout(Ptr<Device> device, const PipelineLayoutDesc &desc);
-
-        [[nodiscard]] std::vector<Ptr<DescriptorSetLayout>>::const_iterator begin() const;
-        [[nodiscard]] std::vector<Ptr<DescriptorSetLayout>>::const_iterator end() const;
+        [[nodiscard]] std::vector<DescriptorSetLayoutT *>::const_iterator begin() const;
+        [[nodiscard]] std::vector<DescriptorSetLayoutT *>::const_iterator end() const;
 
     private:
-        Ptr<Device> m_Device;
+        DeviceT *m_Device;
 
-        std::vector<Ptr<DescriptorSetLayout>> m_DescriptorSetLayouts;
+        std::vector<DescriptorSetLayoutT *> m_DescriptorSetLayouts;
     };
 
-    class Pipeline final : public glal::Pipeline
+    class PipelineT final : public glal::PipelineT
     {
-        friend Device;
-        friend CommandBuffer;
-
     public:
-        ~Pipeline() override;
+        explicit PipelineT(DeviceT *device, const PipelineDesc &desc);
+        ~PipelineT() override;
 
         [[nodiscard]] PipelineType GetType() const override;
-
-    protected:
-        explicit Pipeline(Ptr<Device> device, const PipelineDesc &desc);
 
         [[nodiscard]] std::uint32_t GetHandle() const;
         [[nodiscard]] std::uint32_t GetVertexStride() const;
@@ -480,8 +425,8 @@ namespace glal::opengl
         void LayoutVertexArray(std::uint32_t vertex_array) const;
 
     private:
-        Ptr<Device> m_Device;
-        Ptr<PipelineLayout> m_Layout;
+        DeviceT *m_Device;
+        PipelineLayoutT *m_Layout;
 
         PipelineType m_Type;
         std::vector<VertexAttribute> m_VertexAttributes;
@@ -492,13 +437,13 @@ namespace glal::opengl
 
     void TranslateImageFormat(
         ImageFormat image_format,
-        Ptr<GLenum> internal_format,
-        Ptr<GLenum> external_format,
-        Ptr<GLenum> type);
+        GLenum *internal_format,
+        GLenum *external_format,
+        GLenum *type);
 
     void TranslateDataType(
         DataType data_type,
-        Ptr<std::uint32_t> size,
-        Ptr<GLenum> type,
-        Ptr<GLboolean> normalized);
+        std::uint32_t *size,
+        GLenum *type,
+        GLboolean *normalized);
 }

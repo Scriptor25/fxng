@@ -58,7 +58,7 @@ static GLFWwindow *create_window(
 
     if (config.Main)
     {
-        if (const auto error = glewContextInit())
+        if (const auto error = glewInit())
         {
             auto message = reinterpret_cast<const char *>(glewGetErrorString(error));
             common::Fatal("failed to initialize glew: {}", message);

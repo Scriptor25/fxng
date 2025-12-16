@@ -6,7 +6,6 @@ namespace glal
 {
     enum AddressMode
     {
-        AddressMode_None,
         AddressMode_Repeat,
         AddressMode_Clamp,
         AddressMode_Mirror,
@@ -14,7 +13,6 @@ namespace glal
 
     enum BufferUsage
     {
-        BufferUsage_None,
         BufferUsage_Vertex,
         BufferUsage_Index,
         BufferUsage_Uniform,
@@ -23,7 +21,6 @@ namespace glal
 
     enum CommandBufferUsage
     {
-        CommandBufferUsage_None,
         CommandBufferUsage_Once,
         CommandBufferUsage_Reusable,
     };
@@ -57,8 +54,6 @@ namespace glal
 
     enum DeviceFeature
     {
-        DeviceFeature_None,
-
         DeviceFeature_Compute,
         DeviceFeature_GeometryShader,
         DeviceFeature_Tessellation,
@@ -71,23 +66,19 @@ namespace glal
 
     enum Filter
     {
-        Filter_None,
         Filter_Nearest,
         Filter_Linear,
     };
 
-    enum ImageDimension
+    enum ImageType
     {
-        ImageDimension_None,
-        ImageDimension_1D,
-        ImageDimension_2D,
-        ImageDimension_3D,
+        ImageType_1D,
+        ImageType_2D,
+        ImageType_3D,
     };
 
     enum ImageFormat
     {
-        ImageFormat_None,
-
         ImageFormat_RGBA8_UNorm,
         ImageFormat_RGBA8_SRGB,
         ImageFormat_BGRA8_UNorm,
@@ -100,17 +91,15 @@ namespace glal
         ImageFormat_D32F,
     };
 
-    enum MemoryUsage : std::uint32_t
+    enum MemoryUsage
     {
-        MemoryUsage_None         = 0,
-        MemoryUsage_DeviceLocal  = 1 << 0,
-        MemoryUsage_HostToDevice = 1 << 1,
-        MemoryUsage_DeviceToHost = 1 << 2,
+        MemoryUsage_DeviceLocal,
+        MemoryUsage_HostToDevice,
+        MemoryUsage_DeviceToHost,
     };
 
     enum PipelineType
     {
-        PipelineType_None,
         PipelineType_Graphics,
         PipelineType_Compute,
         PipelineType_RayTracing,
@@ -127,7 +116,6 @@ namespace glal
 
     enum ResourceState
     {
-        ResourceState_None,
         ResourceState_VertexBuffer,
         ResourceState_IndexBuffer,
         ResourceState_ConstantBuffer,
