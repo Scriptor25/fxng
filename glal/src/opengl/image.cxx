@@ -1,8 +1,7 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
-#include <GL/glew.h>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
-fxng::glal::opengl::Image::Image(Device *device, const ImageDesc &desc)
+glal::opengl::Image::Image(const Ptr<Device> device, const ImageDesc &desc)
     : m_Device(device),
       m_Format(desc.Format),
       m_Dimension(desc.Dimension),
@@ -74,41 +73,41 @@ fxng::glal::opengl::Image::Image(Device *device, const ImageDesc &desc)
             nullptr);
         break;
     default:
-        Fatal("image dimension not supported");
+        common::Fatal("image dimension not supported");
     }
 }
 
-fxng::glal::opengl::Image::~Image()
+glal::opengl::Image::~Image()
 {
     glDeleteTextures(1, &m_Handle);
 }
 
-fxng::glal::ImageFormat fxng::glal::opengl::Image::GetFormat() const
+glal::ImageFormat glal::opengl::Image::GetFormat() const
 {
     return m_Format;
 }
 
-fxng::glal::ImageDimension fxng::glal::opengl::Image::GetDimension() const
+glal::ImageDimension glal::opengl::Image::GetDimension() const
 {
     return m_Dimension;
 }
 
-fxng::glal::Extent3D fxng::glal::opengl::Image::GetExtent() const
+glal::Extent3D glal::opengl::Image::GetExtent() const
 {
     return m_Extent;
 }
 
-std::uint32_t fxng::glal::opengl::Image::GetMipLevelCount() const
+std::uint32_t glal::opengl::Image::GetMipLevelCount() const
 {
     return m_MipLevelCount;
 }
 
-std::uint32_t fxng::glal::opengl::Image::GetArrayLayerCount() const
+std::uint32_t glal::opengl::Image::GetArrayLayerCount() const
 {
     return m_ArrayLayerCount;
 }
 
-std::uint32_t fxng::glal::opengl::Image::GetHandle() const
+std::uint32_t glal::opengl::Image::GetHandle() const
 {
     return m_Handle;
 }

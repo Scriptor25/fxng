@@ -7,7 +7,7 @@
 #include <string_view>
 #include <unordered_map>
 
-namespace fxng
+namespace common
 {
     enum LogLevel
     {

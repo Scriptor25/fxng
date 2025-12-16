@@ -1,8 +1,7 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
-#include <GL/glew.h>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
-fxng::glal::opengl::Buffer::Buffer(Device *device, const BufferDesc &desc)
+glal::opengl::Buffer::Buffer(const Ptr<Device> device, const BufferDesc &desc)
     : m_Device(device),
       m_Size(desc.Size),
       m_Usage(desc.Usage),
@@ -27,22 +26,22 @@ fxng::glal::opengl::Buffer::Buffer(Device *device, const BufferDesc &desc)
     glNamedBufferStorage(m_Handle, static_cast<GLsizeiptr>(m_Size), nullptr, flags);
 }
 
-fxng::glal::opengl::Buffer::~Buffer()
+glal::opengl::Buffer::~Buffer()
 {
     glDeleteBuffers(1, &m_Handle);
 }
 
-std::size_t fxng::glal::opengl::Buffer::GetSize() const
+std::size_t glal::opengl::Buffer::GetSize() const
 {
     return m_Size;
 }
 
-fxng::glal::BufferUsage fxng::glal::opengl::Buffer::GetUsage() const
+glal::BufferUsage glal::opengl::Buffer::GetUsage() const
 {
     return m_Usage;
 }
 
-void *fxng::glal::opengl::Buffer::Map()
+void *glal::opengl::Buffer::Map()
 {
     GLenum access;
     switch (m_Memory)
@@ -54,18 +53,18 @@ void *fxng::glal::opengl::Buffer::Map()
         access = GL_READ_ONLY;
         break;
     default:
-        Fatal("cannot map buffer with memory usage {}", m_Memory);
+        common::Fatal("memory usage not supported");
     }
 
     return glMapNamedBuffer(m_Handle, access);
 }
 
-void fxng::glal::opengl::Buffer::Unmap()
+void glal::opengl::Buffer::Unmap()
 {
     glUnmapNamedBuffer(m_Handle);
 }
 
-std::uint32_t fxng::glal::opengl::Buffer::GetHandle() const
+std::uint32_t glal::opengl::Buffer::GetHandle() const
 {
     return m_Handle;
 }

@@ -1,10 +1,9 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
-#include <GL/glew.h>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
-fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
+glal::opengl::Pipeline::Pipeline(const Ptr<Device> device, const PipelineDesc &desc)
     : m_Device(device),
-      m_Layout(dynamic_cast<PipelineLayout *>(desc.Layout)),
+      m_Layout(dynamic_cast<Ptr<PipelineLayout>>(desc.Layout)),
       m_Type(desc.Type),
       m_VertexAttributes(desc.VertexAttributeCount),
       m_VertexStride()
@@ -30,7 +29,7 @@ fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
     for (std::uint32_t i = 0; i < desc.StageCount; ++i)
     {
         const auto stage = desc.Stages + i;
-        const auto shader_module_impl = dynamic_cast<const ShaderModule *>(stage->Module);
+        const auto shader_module_impl = dynamic_cast<Ptr<ShaderModule>>(stage->Module);
 
         glAttachShader(m_Handle, shader_module_impl->GetHandle());
     }
@@ -46,7 +45,7 @@ fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
         glGetProgramInfoLog(m_Handle, 1024, &log_length, message);
         message[log_length] = 0;
 
-        Fatal("failed to link program: {}", message);
+        common::Fatal("failed to link program: {}", message);
     }
 
     glValidateProgram(m_Handle);
@@ -60,40 +59,26 @@ fxng::glal::opengl::Pipeline::Pipeline(Device *device, const PipelineDesc &desc)
         glGetProgramInfoLog(m_Handle, 1024, &log_length, message);
         message[log_length] = 0;
 
-        Fatal("failed to validate program: {}", message);
+        common::Fatal("failed to validate program: {}", message);
     }
-
-    glUseProgram(m_Handle);
-    for (const auto set_layout : *m_Layout)
-        for (auto &block : *set_layout)
-            switch (block.Type)
-            {
-            case DescriptorType_UniformBuffer:
-                glUniformBlockBinding(m_Handle, block.Location, block.Binding);
-                break;
-            default:
-                glShaderStorageBlockBinding(m_Handle, block.Location, block.Binding);
-                break;
-            }
-    glUseProgram(0);
 }
 
-fxng::glal::opengl::Pipeline::~Pipeline()
+glal::opengl::Pipeline::~Pipeline()
 {
     glDeleteProgram(m_Handle);
 }
 
-fxng::glal::PipelineType fxng::glal::opengl::Pipeline::GetType() const
+glal::PipelineType glal::opengl::Pipeline::GetType() const
 {
     return m_Type;
 }
 
-std::uint32_t fxng::glal::opengl::Pipeline::GetVertexStride() const
+std::uint32_t glal::opengl::Pipeline::GetVertexStride() const
 {
     return m_VertexStride;
 }
 
-void fxng::glal::opengl::Pipeline::LayoutVertexArray(const std::uint32_t vertex_array) const
+void glal::opengl::Pipeline::LayoutVertexArray(const std::uint32_t vertex_array) const
 {
     for (auto &vertex_attribute : m_VertexAttributes)
     {
@@ -114,7 +99,7 @@ void fxng::glal::opengl::Pipeline::LayoutVertexArray(const std::uint32_t vertex_
     }
 }
 
-std::uint32_t fxng::glal::opengl::Pipeline::GetHandle() const
+std::uint32_t glal::opengl::Pipeline::GetHandle() const
 {
     return m_Handle;
 }

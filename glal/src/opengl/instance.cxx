@@ -1,5 +1,5 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
 static void gl_debug_message_callback(
     const GLenum source,
@@ -10,23 +10,23 @@ static void gl_debug_message_callback(
     const GLchar *message,
     const void * /* user_param */)
 {
-    fxng::LogLevel log_level;
+    common::LogLevel log_level;
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        log_level = fxng::LogLevel_Verbose;
+        log_level = common::LogLevel_Verbose;
         break;
     case GL_DEBUG_SEVERITY_LOW:
-        log_level = fxng::LogLevel_Info;
+        log_level = common::LogLevel_Info;
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        log_level = fxng::LogLevel_Warning;
+        log_level = common::LogLevel_Warning;
         break;
     case GL_DEBUG_SEVERITY_HIGH:
-        log_level = fxng::LogLevel_Error;
+        log_level = common::LogLevel_Error;
         break;
     default:
-        log_level = fxng::LogLevel_Debug;
+        log_level = common::LogLevel_Debug;
         break;
     }
 
@@ -91,16 +91,16 @@ static void gl_debug_message_callback(
         break;
     }
 
-    Log(log_level, "[GL] {} {} {}: {}", source_string, type_string, id, message);
+    common::Log(log_level, "[GL] {} {} {}: {}", source_string, type_string, id, message);
 }
 
-fxng::glal::opengl::Instance::Instance(const InstanceDesc &desc)
+glal::opengl::Instance::Instance(const InstanceDesc &desc)
 {
     glewContextInit();
 
     if (desc.EnableValidation)
     {
-        glDebugMessageCallback(gl_debug_message_callback, nullptr);
+        glDebugMessageCallback(gl_debug_message_callback, this);
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     }
@@ -109,7 +109,7 @@ fxng::glal::opengl::Instance::Instance(const InstanceDesc &desc)
     m_PhysicalDeviceCount = 1;
 }
 
-fxng::glal::opengl::Instance::~Instance()
+glal::opengl::Instance::~Instance()
 {
     delete[] m_PhysicalDevices;
 
@@ -117,7 +117,7 @@ fxng::glal::opengl::Instance::~Instance()
     m_PhysicalDeviceCount = 0;
 }
 
-std::uint32_t fxng::glal::opengl::Instance::EnumeratePhysicalDevices(glal::PhysicalDevice **devices)
+std::uint32_t glal::opengl::Instance::EnumeratePhysicalDevices(const Ptr<Ptr<glal::PhysicalDevice>> devices)
 {
     if (devices)
         *devices = m_PhysicalDevices;

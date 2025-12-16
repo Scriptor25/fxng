@@ -1,9 +1,9 @@
 #define GLFW_INCLUDE_NONE
 
-#include <fxng/internal/glal_opengl.hxx>
+#include <glal/opengl.hxx>
 #include <GLFW/glfw3.h>
 
-fxng::glal::opengl::Swapchain::Swapchain(Device *device, const SwapchainDesc &desc)
+glal::opengl::Swapchain::Swapchain(const Ptr<Device> device, const SwapchainDesc &desc)
     : m_Device(device),
       m_Extent(desc.Extent),
       m_ImageCount(desc.ImageCount),
@@ -23,34 +23,34 @@ fxng::glal::opengl::Swapchain::Swapchain(Device *device, const SwapchainDesc &de
                 .MipLevelCount = 1,
                 .ArrayLayerCount = 1,
             });
-        const auto image_impl = dynamic_cast<Image *>(image);
+        const auto image_impl = dynamic_cast<Ptr<Image>>(image);
         m_Images[i] = image_impl;
         m_ImageViews[i] = new ImageView(image_impl);
     }
 }
 
-fxng::glal::opengl::Swapchain::~Swapchain()
+glal::opengl::Swapchain::~Swapchain()
 {
     for (const auto image_view : m_ImageViews)
         delete image_view;
 }
 
-fxng::glal::Extent2D fxng::glal::opengl::Swapchain::GetExtent() const
+glal::Extent2D glal::opengl::Swapchain::GetExtent() const
 {
     return m_Extent;
 }
 
-std::uint32_t fxng::glal::opengl::Swapchain::GetImageCount() const
+std::uint32_t glal::opengl::Swapchain::GetImageCount() const
 {
     return m_ImageCount;
 }
 
-fxng::glal::ImageView *fxng::glal::opengl::Swapchain::GetImageView(const std::uint32_t index) const
+glal::Ptr<glal::ImageView> glal::opengl::Swapchain::GetImageView(const std::uint32_t index) const
 {
     return m_ImageViews.at(index);
 }
 
-std::uint32_t fxng::glal::opengl::Swapchain::AcquireNextImage(glal::Fence *fence)
+std::uint32_t glal::opengl::Swapchain::AcquireNextImage(const Ptr<glal::Fence> fence)
 {
     m_ImageIndex = (m_ImageIndex + 1) % m_ImageCount;
 
@@ -61,7 +61,7 @@ std::uint32_t fxng::glal::opengl::Swapchain::AcquireNextImage(glal::Fence *fence
     return m_ImageIndex;
 }
 
-void fxng::glal::opengl::Swapchain::Present() const
+void glal::opengl::Swapchain::Present() const
 {
     const auto image_view = m_ImageViews.at(m_ImageIndex);
 

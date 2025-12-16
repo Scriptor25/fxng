@@ -52,5 +52,7 @@ set(YAML_ENABLE_PIC OFF)
 
 add_subdirectory(deps/yaml)
 
+add_subdirectory(common)
+add_subdirectory(glal)
 add_subdirectory(engine)
 add_subdirectory(game)

@@ -1,7 +1,7 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
-fxng::glal::opengl::DescriptorSet::DescriptorSet(Device *device, const DescriptorSetDesc &desc)
+glal::opengl::DescriptorSet::DescriptorSet(const Ptr<Device> device, const DescriptorSetDesc &desc)
     : m_Device(device),
       m_Layouts(desc.DescriptorSetLayoutCount)
 {
@@ -9,9 +9,9 @@ fxng::glal::opengl::DescriptorSet::DescriptorSet(Device *device, const Descripto
         m_Layouts.at(i) = dynamic_cast<DescriptorSetLayout *>(desc.DescriptorSetLayouts[i]);
 }
 
-void fxng::glal::opengl::DescriptorSet::BindBuffer(const std::uint32_t binding, const glal::Buffer *buffer)
+void glal::opengl::DescriptorSet::BindBuffer(const std::uint32_t binding, const Ptr<glal::Buffer> buffer)
 {
-    const auto buffer_impl = dynamic_cast<const Buffer *>(buffer);
+    const auto buffer_impl = dynamic_cast<Ptr<Buffer>>(buffer);
 
     GLenum target = 0;
     for (const auto layout : m_Layouts)
@@ -29,7 +29,7 @@ void fxng::glal::opengl::DescriptorSet::BindBuffer(const std::uint32_t binding, 
                 }
                 break;
             }
-    Assert(target, "missing descriptor for binding {}", binding);
+    common::Assert(target, "missing descriptor for binding {}", binding);
 
     m_BufferBindings[binding] = {
         .Target = target,
@@ -40,13 +40,13 @@ void fxng::glal::opengl::DescriptorSet::BindBuffer(const std::uint32_t binding, 
     };
 }
 
-void fxng::glal::opengl::DescriptorSet::BindBuffer(
+void glal::opengl::DescriptorSet::BindBuffer(
     const std::uint32_t binding,
-    const glal::Buffer *buffer,
+    const Ptr<glal::Buffer> buffer,
     const std::uint32_t offset,
     const std::uint32_t size)
 {
-    const auto buffer_impl = dynamic_cast<const Buffer *>(buffer);
+    const auto buffer_impl = dynamic_cast<Ptr<Buffer>>(buffer);
 
     GLenum target = 0;
     for (const auto layout : m_Layouts)
@@ -64,7 +64,7 @@ void fxng::glal::opengl::DescriptorSet::BindBuffer(
                 }
                 break;
             }
-    Assert(target, "missing descriptor for binding {}", binding);
+    common::Assert(target, "missing descriptor for binding {}", binding);
 
     m_BufferBindings[binding] = {
         .Target = target,
@@ -75,13 +75,13 @@ void fxng::glal::opengl::DescriptorSet::BindBuffer(
     };
 }
 
-void fxng::glal::opengl::DescriptorSet::BindImageView(
+void glal::opengl::DescriptorSet::BindImageView(
     const std::uint32_t binding,
-    const glal::ImageView *image_view,
-    const glal::Sampler *sampler)
+    const Ptr<glal::ImageView> image_view,
+    const Ptr<glal::Sampler> sampler)
 {
-    const auto image_view_impl = dynamic_cast<const ImageView *>(image_view);
-    const auto sampler_impl = dynamic_cast<const Sampler *>(sampler);
+    const auto image_view_impl = dynamic_cast<Ptr<ImageView>>(image_view);
+    const auto sampler_impl = dynamic_cast<Ptr<Sampler>>(sampler);
 
     m_ImageBindings[binding] = {
         .ImageViewImpl = image_view_impl,
@@ -89,7 +89,7 @@ void fxng::glal::opengl::DescriptorSet::BindImageView(
     };
 }
 
-void fxng::glal::opengl::DescriptorSet::Bind(const std::uint32_t index) const
+void glal::opengl::DescriptorSet::Bind(const std::uint32_t index) const
 {
     const auto binding_base = index * 8;
 

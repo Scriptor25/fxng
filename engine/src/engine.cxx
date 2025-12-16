@@ -2,15 +2,15 @@
 
 #include <filesystem>
 #include <fstream>
+#include <common/log.hxx>
 #include <fxng/engine.hxx>
-#include <fxng/log.hxx>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <yaml-cpp/yaml.h>
 
 static void glfw_error_callback(int error_code, const char *description)
 {
-    fxng::Log(fxng::LogLevel_Info, "[glfw {:#08x}] {}", error_code, description);
+    common::Log(common::LogLevel_Info, "[glfw {:#08x}] {}", error_code, description);
 }
 
 static void gl_debug_message_callback(
@@ -25,7 +25,7 @@ static void gl_debug_message_callback(
     const auto window = static_cast<const GLFWwindow *>(user_param);
     (void) window;
 
-    fxng::Log(fxng::LogLevel_Info, "[gl {:#08x}] {}", id, message);
+    common::Log(common::LogLevel_Info, "[gl {:#08x}] {}", id, message);
 }
 
 static GLFWwindow *create_window(
@@ -61,7 +61,7 @@ static GLFWwindow *create_window(
         if (const auto error = glewContextInit())
         {
             auto message = reinterpret_cast<const char *>(glewGetErrorString(error));
-            fxng::Fatal("failed to initialize glew: {}", message);
+            common::Fatal("failed to initialize glew: {}", message);
         }
     }
 
@@ -110,7 +110,7 @@ fxng::Engine::Engine(const EngineConfig &config)
     glfwSetErrorCallback(glfw_error_callback);
 
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
-    Assert(glfwInit(), "failed to initialize glfw");
+    common::Assert(glfwInit(), "failed to initialize glfw");
 
     const auto primary_monitor = glfwGetPrimaryMonitor();
 
@@ -120,7 +120,7 @@ fxng::Engine::Engine(const EngineConfig &config)
             continue;
 
         m_PrimaryWindow = create_window(entry, config.Application.Name, "Primary", primary_monitor, nullptr);
-        Assert(m_PrimaryWindow, "failed to create glfw window");
+        common::Assert(m_PrimaryWindow, "failed to create glfw window");
         break;
     }
     for (auto &entry : config.Windows)
@@ -137,7 +137,7 @@ fxng::Engine::Engine(const EngineConfig &config)
             "Secondary",
             primary_monitor,
             m_PrimaryWindow);
-        Assert(window, "failed to create glfw window");
+        common::Assert(window, "failed to create glfw window");
         m_Windows.push_back(window);
     }
 
@@ -232,7 +232,7 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
         path = path / "index.yaml";
 
     std::ifstream stream(path);
-    Assert(stream.is_open(), "failed to open {}", path);
+    common::Assert(stream.is_open(), "failed to open {}", path);
 
     auto root = YAML::Load(stream);
     auto type = root["type"].as<std::string>();
@@ -255,7 +255,7 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
         auto name = root["name"].as<std::string>();
         auto source = root["source"].as<std::string>();
 
-        Log(LogLevel_Info, "index shader id={} name={} source={}", id, name, source);
+        common::Log(common::LogLevel_Info, "index shader id={} name={} source={}", id, name, source);
 
         for (auto node : root["input"])
         {
@@ -263,7 +263,12 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
             auto input_type = node["type"].as<std::string>();
             auto input_reference = node["reference"].as<std::optional<std::string>>();
 
-            Log(LogLevel_Info, "  input name={} type={} reference={}", input_name, input_type, input_reference);
+            common::Log(
+                common::LogLevel_Info,
+                "  input name={} type={} reference={}",
+                input_name,
+                input_type,
+                input_reference);
         }
 
         for (auto node : root["output"])
@@ -272,7 +277,12 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
             auto output_type = node["type"].as<std::string>();
             auto output_reference = node["reference"].as<std::optional<std::string>>();
 
-            Log(LogLevel_Info, "  output name={} type={} reference={}", output_name, output_type, output_reference);
+            common::Log(
+                common::LogLevel_Info,
+                "  output name={} type={} reference={}",
+                output_name,
+                output_type,
+                output_reference);
         }
 
         for (auto node : root["uniform"])
@@ -281,7 +291,12 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
             auto uniform_type = node["type"].as<std::string>();
             auto uniform_reference = node["reference"].as<std::optional<std::string>>();
 
-            Log(LogLevel_Info, "  uniform name={} type={} reference={}", uniform_name, uniform_type, uniform_reference);
+            common::Log(
+                common::LogLevel_Info,
+                "  uniform name={} type={} reference={}",
+                uniform_name,
+                uniform_type,
+                uniform_reference);
         }
 
         return;
@@ -293,11 +308,11 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
         auto name = root["name"].as<std::string>();
         auto stages = root["stages"].as<std::map<std::string, std::string>>();
 
-        Log(LogLevel_Info, "index material id={} name={}", id, name);
+        common::Log(common::LogLevel_Info, "index material id={} name={}", id, name);
 
         for (auto stage : stages)
         {
-            Log(LogLevel_Info, "  stage key={} value={}", stage.first, stage.second);
+            common::Log(common::LogLevel_Info, "  stage key={} value={}", stage.first, stage.second);
         }
 
         return;
@@ -309,7 +324,7 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
         auto name = root["name"].as<std::string>();
         auto source = root["source"].as<std::string>();
 
-        Log(LogLevel_Info, "index mesh id={} name={} source={}", id, name, source);
+        common::Log(common::LogLevel_Info, "index mesh id={} name={} source={}", id, name, source);
 
         return;
     }
@@ -319,27 +334,27 @@ void fxng::Engine::IndexYaml(std::filesystem::path path)
         auto id = root["id"].as<std::string>();
         auto name = root["name"].as<std::string>();
 
-        Log(LogLevel_Info, "index scene id={} name={}", id, name);
+        common::Log(common::LogLevel_Info, "index scene id={} name={}", id, name);
 
         for (auto node : root["entities"])
         {
             auto entity_id = node["id"].as<std::string>();
             auto entity_name = node["name"].as<std::string>();
 
-            Log(LogLevel_Info, "  entity id={} name={}", entity_id, entity_name);
+            common::Log(common::LogLevel_Info, "  entity id={} name={}", entity_id, entity_name);
 
             for (auto component_node : node["components"])
             {
                 auto component_type = component_node["type"].as<std::string>();
 
-                Log(LogLevel_Info, "    component type={}", component_type);
+                common::Log(common::LogLevel_Info, "    component type={}", component_type);
             }
         }
 
         return;
     }
 
-    Log(LogLevel_Error, "invalid yaml file type {}", type);
+    common::Log(common::LogLevel_Error, "invalid yaml file type {}", type);
 }
 
 void fxng::Engine::Frame()

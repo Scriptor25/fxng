@@ -1,8 +1,7 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
-#include <GL/glew.h>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
-fxng::glal::opengl::ShaderModule::ShaderModule(Device *device, const ShaderModuleDesc &desc)
+glal::opengl::ShaderModule::ShaderModule(const Ptr<Device> device, const ShaderModuleDesc &desc)
     : m_Device(device),
       m_Stage(desc.Stage)
 {
@@ -28,7 +27,7 @@ fxng::glal::opengl::ShaderModule::ShaderModule(Device *device, const ShaderModul
         type = GL_COMPUTE_SHADER;
         break;
     default:
-        Fatal("shader stage not supported");
+        common::Fatal("shader stage not supported");
     }
 
     m_Handle = glCreateShader(type);
@@ -36,17 +35,17 @@ fxng::glal::opengl::ShaderModule::ShaderModule(Device *device, const ShaderModul
     glSpecializeShader(m_Handle, "main", 0, nullptr, nullptr);
 }
 
-fxng::glal::opengl::ShaderModule::~ShaderModule()
+glal::opengl::ShaderModule::~ShaderModule()
 {
     glDeleteShader(m_Handle);
 }
 
-fxng::glal::ShaderStage fxng::glal::opengl::ShaderModule::GetStage() const
+glal::ShaderStage glal::opengl::ShaderModule::GetStage() const
 {
     return m_Stage;
 }
 
-std::uint32_t fxng::glal::opengl::ShaderModule::GetHandle() const
+std::uint32_t glal::opengl::ShaderModule::GetHandle() const
 {
     return m_Handle;
 }

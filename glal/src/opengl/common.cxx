@@ -1,16 +1,16 @@
-#include <fxng/log.hxx>
-#include <fxng/internal/glal_opengl.hxx>
+#include <common/log.hxx>
+#include <glal/opengl.hxx>
 
-fxng::glal::Instance *fxng::glal::CreateInstanceOpenGL(const InstanceDesc &desc)
+glal::Ptr<glal::Instance> glal::CreateInstanceOpenGL(const InstanceDesc &desc)
 {
     return new opengl::Instance(desc);
 }
 
-void fxng::glal::opengl::TranslateImageFormat(
+void glal::opengl::TranslateImageFormat(
     const ImageFormat image_format,
-    GLenum *internal_format,
-    GLenum *external_format,
-    GLenum *type)
+    const Ptr<GLenum> internal_format,
+    const Ptr<GLenum> external_format,
+    const Ptr<GLenum> type)
 {
     switch (image_format)
     {
@@ -55,15 +55,15 @@ void fxng::glal::opengl::TranslateImageFormat(
         type && ((*type = GL_FLOAT));
         break;
     default:
-        Fatal("image format not supported");
+        common::Fatal("image format not supported");
     }
 }
 
-void fxng::glal::opengl::TranslateDataType(
+void glal::opengl::TranslateDataType(
     const DataType data_type,
-    std::uint32_t *size,
-    GLenum *type,
-    GLboolean *normalized)
+    const Ptr<std::uint32_t> size,
+    const Ptr<GLenum> type,
+    const Ptr<GLboolean> normalized)
 {
     switch (data_type)
     {
@@ -118,6 +118,6 @@ void fxng::glal::opengl::TranslateDataType(
         normalized && ((*normalized = GL_FALSE));
         break;
     default:
-        Fatal("vertex attribute type not supported");
+        common::Fatal("vertex attribute type not supported");
     }
 }

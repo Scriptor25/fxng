@@ -3,8 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <fxng/engine.hxx>
-#include <fxng/glal.hxx>
-#include <fxng/log.hxx>
+#include <glal/glal.hxx>
+#include <common/log.hxx>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
@@ -34,13 +34,13 @@ static constexpr Vertex vertices[] = {
     { { 0.5f, -0.28867513f }, { 0, 0, 1 } },
 };
 
-static fxng::glal::ShaderModule *load_shader_module(
-    fxng::glal::Device *device,
-    fxng::glal::ShaderStage stage,
+static glal::ShaderModule *load_shader_module(
+    glal::Device *device,
+    glal::ShaderStage stage,
     std::filesystem::path path)
 {
     std::ifstream stream(path, std::ios::binary | std::ios::ate);
-    fxng::Assert(stream.is_open(), "failed to open file {}", path);
+    common::Assert(stream.is_open(), "failed to open file {}", path);
 
     std::vector<char> code(stream.tellg());
     stream.seekg(0, std::ios::beg);
@@ -56,8 +56,8 @@ static fxng::glal::ShaderModule *load_shader_module(
 
 struct
 {
-    fxng::glal::Device *device;
-    fxng::glal::Swapchain *swapchain;
+    glal::Device *device;
+    glal::Swapchain *swapchain;
 } static application_state = {
     .device = nullptr,
     .swapchain = nullptr,
@@ -70,7 +70,7 @@ static void glfw_framebuffer_size_callback(GLFWwindow *window, const int width, 
         {
             .NativeWindowHandle = window,
             .Extent = { width, height },
-            .Format = fxng::glal::ImageFormat_BGRA8_UNorm,
+            .Format = glal::ImageFormat_BGRA8_UNorm,
             .ImageCount = 2,
         });
 }
@@ -95,7 +95,7 @@ int main()
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
-    const auto instance = fxng::glal::CreateInstanceOpenGL(
+    const auto instance = glal::CreateInstanceOpenGL(
         {
             .EnableValidation = true,
             .ApplicationName = "Hello World",
@@ -103,33 +103,32 @@ int main()
 
     const auto physical_device_count = instance->EnumeratePhysicalDevices(nullptr);
 
-    std::vector<fxng::glal::PhysicalDevice *> physical_devices(physical_device_count);
+    std::vector<glal::PhysicalDevice *> physical_devices(physical_device_count);
     instance->EnumeratePhysicalDevices(physical_devices.data());
 
     const auto physical_device = physical_devices.front();
     const auto device = physical_device->CreateDevice();
 
-    const auto graphics_queue = device->GetQueue(fxng::glal::QueueType_Graphics);
-    const auto present_queue = device->GetQueue(fxng::glal::QueueType_Present);
+    const auto graphics_queue = device->GetQueue(glal::QueueType_Graphics);
+    const auto present_queue = device->GetQueue(glal::QueueType_Present);
 
     application_state.device = device;
     application_state.swapchain = device->CreateSwapchain(
         {
             .NativeWindowHandle = window,
             .Extent = { width, height },
-            .Format = fxng::glal::ImageFormat_BGRA8_UNorm,
+            .Format = glal::ImageFormat_BGRA8_UNorm,
             .ImageCount = 2,
         });
 
     constexpr std::array descriptor_bindings
     {
-        fxng::glal::DescriptorBinding
+        glal::DescriptorBinding
         {
             .Binding = 0,
-            .Location = 0,
-            .Type = fxng::glal::DescriptorType_UniformBuffer,
+            .Type = glal::DescriptorType_UniformBuffer,
             .Count = 1,
-            .Stages = fxng::glal::ShaderStage_Vertex,
+            .Stages = glal::ShaderStage_Vertex,
         },
     };
 
@@ -152,38 +151,38 @@ int main()
             .DescriptorSetLayoutCount = 1,
         });
 
-    const auto vertex_shader = load_shader_module(device, fxng::glal::ShaderStage_Vertex, "vertex.spv");
-    const auto fragment_shader = load_shader_module(device, fxng::glal::ShaderStage_Fragment, "fragment.spv");
+    const auto vertex_shader = load_shader_module(device, glal::ShaderStage_Vertex, "vertex.spv");
+    const auto fragment_shader = load_shader_module(device, glal::ShaderStage_Fragment, "fragment.spv");
 
     const std::array pipeline_stages
     {
-        fxng::glal::PipelineStageDesc
+        glal::PipelineStage
         {
-            .Stage = fxng::glal::ShaderStage_Vertex,
+            .Stage = glal::ShaderStage_Vertex,
             .Module = vertex_shader,
         },
-        fxng::glal::PipelineStageDesc
+        glal::PipelineStage
         {
-            .Stage = fxng::glal::ShaderStage_Fragment,
+            .Stage = glal::ShaderStage_Fragment,
             .Module = fragment_shader,
         },
     };
 
     constexpr std::array vertex_attributes
     {
-        fxng::glal::VertexAttributeDesc
+        glal::VertexAttribute
         {
             .Binding = 0,
             .Location = 0,
-            .Type = fxng::glal::DataType_Float,
+            .Type = glal::DataType_Float,
             .Count = 2,
             .Offset = offsetof(Vertex, position),
         },
-        fxng::glal::VertexAttributeDesc
+        glal::VertexAttribute
         {
             .Binding = 0,
             .Location = 1,
-            .Type = fxng::glal::DataType_Float,
+            .Type = glal::DataType_Float,
             .Count = 3,
             .Offset = offsetof(Vertex, color),
         },
@@ -191,7 +190,7 @@ int main()
 
     const auto pipeline = device->CreatePipeline(
         {
-            .Type = fxng::glal::PipelineType_Graphics,
+            .Type = glal::PipelineType_Graphics,
             .Stages = pipeline_stages.data(),
             .StageCount = pipeline_stages.size(),
             .VertexAttributes = vertex_attributes.data(),
@@ -205,8 +204,8 @@ int main()
     const auto uniform_buffer = device->CreateBuffer(
         {
             .Size = sizeof(UniformBufferObject),
-            .Usage = fxng::glal::BufferUsage_Storage,
-            .Memory = fxng::glal::MemoryUsage_HostToDevice,
+            .Usage = glal::BufferUsage_Storage,
+            .Memory = glal::MemoryUsage_HostToDevice,
         });
 
     descriptor_set->BindBuffer(0, uniform_buffer);
@@ -214,8 +213,8 @@ int main()
     const auto vertex_buffer = device->CreateBuffer(
         {
             .Size = sizeof(vertices),
-            .Usage = fxng::glal::BufferUsage_Vertex,
-            .Memory = fxng::glal::MemoryUsage_HostToDevice,
+            .Usage = glal::BufferUsage_Vertex,
+            .Memory = glal::MemoryUsage_HostToDevice,
         });
 
     {
@@ -224,7 +223,7 @@ int main()
         vertex_buffer->Unmap();
     }
 
-    const auto command_buffer = device->CreateCommandBuffer(fxng::glal::CommandBufferUsage_Reusable);
+    const auto command_buffer = device->CreateCommandBuffer(glal::CommandBufferUsage_Reusable);
     const auto fence = device->CreateFence();
 
     const auto start_time = std::chrono::high_resolution_clock::now();
@@ -257,14 +256,14 @@ int main()
         const auto image_index = swapchain->AcquireNextImage(fence);
         const auto image_view = swapchain->GetImageView(image_index);
 
-        const fxng::glal::RenderTargetDesc color_target
+        const glal::RenderTarget color_target
         {
             .View = image_view,
             .Clear = true,
             .Value = { .Color = { 0.05f, 0.05f, 0.10f, 1.00f } },
         };
 
-        const fxng::glal::RenderPassDesc render_pass
+        const glal::RenderPassDesc render_pass
         {
             .Color = &color_target,
             .ColorCount = 1,
@@ -273,12 +272,12 @@ int main()
         };
 
         command_buffer->Begin();
-        command_buffer->Transition(image_view->GetImage(), fxng::glal::ResourceState_RenderTarget);
+        command_buffer->Transition(image_view->GetImage(), glal::ResourceState_RenderTarget);
 
         command_buffer->BeginRenderPass(render_pass);
         command_buffer->SetViewport(
-            0.0f,
-            0.0f,
+            0.f,
+            0.f,
             static_cast<float>(swapchain->GetExtent().Width),
             static_cast<float>(swapchain->GetExtent().Height));
         command_buffer->SetScissor(
@@ -287,19 +286,19 @@ int main()
             swapchain->GetExtent().Width,
             swapchain->GetExtent().Height);
         command_buffer->BindPipeline(pipeline);
-        command_buffer->BindDescriptorSet(0, descriptor_set);
+        command_buffer->BindDescriptorSets(0, 1, &descriptor_set);
         command_buffer->BindVertexBuffer(vertex_buffer, 0);
-        command_buffer->Draw(3, 0);
+        command_buffer->Draw(sizeof(vertices) / sizeof(Vertex), 0);
         command_buffer->EndRenderPass();
 
-        command_buffer->Transition(image_view->GetImage(), fxng::glal::ResourceState_Present);
+        command_buffer->Transition(image_view->GetImage(), glal::ResourceState_Present);
         command_buffer->End();
 
         graphics_queue->Submit(command_buffer, 1, fence);
         present_queue->Present(swapchain);
     }
 
-    fxng::glal::DestroyInstance(instance);
+    glal::DestroyInstance(instance);
 
     glfwDestroyWindow(window);
     glfwTerminate();
