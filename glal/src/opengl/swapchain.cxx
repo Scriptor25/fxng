@@ -59,7 +59,7 @@ glal::ImageView glal::opengl::SwapchainT::GetImageView(const std::uint32_t index
     return m_Frames.at(index).ImageViewRef;
 }
 
-std::uint32_t glal::opengl::SwapchainT::AcquireNextImage(const Fence fence)
+std::uint32_t glal::opengl::SwapchainT::AcquireNextImage(Fence fence)
 {
     m_FrameIndex = (m_FrameIndex + 1) % m_FrameCount;
 
@@ -86,12 +86,12 @@ void glal::opengl::SwapchainT::Present() const
         0,
         0,
         0,
-        m_Extent.Width,
-        m_Extent.Height,
+        static_cast<GLint>(m_Extent.Width),
+        static_cast<GLint>(m_Extent.Height),
         0,
         0,
-        m_Extent.Width,
-        m_Extent.Height,
+        static_cast<GLint>(m_Extent.Width),
+        static_cast<GLint>(m_Extent.Height),
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
     glDeleteFramebuffers(1, &framebuffer);

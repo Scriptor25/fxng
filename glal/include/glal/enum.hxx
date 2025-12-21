@@ -144,4 +144,14 @@ namespace glal
         ShaderStage_RayHit        = 1 << 7,
         ShaderStage_RayMiss       = 1 << 8,
     };
+
+    enum PrimitiveTopology
+    {
+        VertexTopology_PointList,
+        VertexTopology_LineList,
+        VertexTopology_LineStrip,
+        VertexTopology_TriangleList,
+        VertexTopology_TriangleStrip,
+        VertexTopology_TriangleFan,
+    };
 }

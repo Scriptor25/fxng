@@ -21,12 +21,12 @@ glal::opengl::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
             m_Handle,
             static_cast<int>(m_MipLevelCount),
             internal_format,
-            m_Extent.Width);
+            static_cast<GLsizei>(m_Extent.Width));
         glTextureSubImage1D(
             m_Handle,
             0,
             0,
-            m_Extent.Width,
+            static_cast<GLsizei>(m_Extent.Width),
             external_format,
             type,
             nullptr);
@@ -37,15 +37,15 @@ glal::opengl::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
             m_Handle,
             static_cast<int>(m_MipLevelCount),
             internal_format,
-            m_Extent.Width,
-            m_Extent.Height);
+            static_cast<GLsizei>(m_Extent.Width),
+            static_cast<GLsizei>(m_Extent.Height));
         glTextureSubImage2D(
             m_Handle,
             0,
             0,
             0,
-            m_Extent.Width,
-            m_Extent.Height,
+            static_cast<GLsizei>(m_Extent.Width),
+            static_cast<GLsizei>(m_Extent.Height),
             external_format,
             type,
             nullptr);
@@ -56,18 +56,18 @@ glal::opengl::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
             m_Handle,
             static_cast<int>(m_MipLevelCount),
             internal_format,
-            m_Extent.Width,
-            m_Extent.Height,
-            m_Extent.Depth);
+            static_cast<GLsizei>(m_Extent.Width),
+            static_cast<GLsizei>(m_Extent.Height),
+            static_cast<GLsizei>(m_Extent.Depth));
         glTextureSubImage3D(
             m_Handle,
             0,
             0,
             0,
             0,
-            m_Extent.Width,
-            m_Extent.Height,
-            m_Extent.Depth,
+            static_cast<GLsizei>(m_Extent.Width),
+            static_cast<GLsizei>(m_Extent.Height),
+            static_cast<GLsizei>(m_Extent.Depth),
             external_format,
             type,
             nullptr);

@@ -7,7 +7,6 @@ glal::vulkan::InstanceT::InstanceT(const InstanceDesc &desc)
     const VkApplicationInfo application_info
     {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-        .pNext = nullptr,
         .pApplicationName = desc.ApplicationName,
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = "GLAL",
@@ -18,12 +17,14 @@ glal::vulkan::InstanceT::InstanceT(const InstanceDesc &desc)
     const VkInstanceCreateInfo instance_create_info
     {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
         .pApplicationInfo = &application_info,
+        // TODO
         .enabledLayerCount = 0,
+        // TODO
         .ppEnabledLayerNames = nullptr,
+        // TODO
         .enabledExtensionCount = 0,
+        // TODO
         .ppEnabledExtensionNames = nullptr,
     };
 
@@ -37,7 +38,7 @@ glal::vulkan::InstanceT::InstanceT(const InstanceDesc &desc)
     vkEnumeratePhysicalDevices(m_Handle, &count, physical_devices.data());
 
     for (const auto physical_device : physical_devices)
-        m_PhysicalDevices.push_back(PhysicalDeviceT(this, physical_device));
+        m_PhysicalDevices.emplace_back(this, physical_device);
 }
 
 glal::vulkan::InstanceT::~InstanceT()

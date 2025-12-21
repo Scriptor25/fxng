@@ -87,4 +87,11 @@ namespace glal
         std::uint32_t Count;
         std::uint32_t Offset;
     };
+
+    struct VertexBinding
+    {
+        std::uint32_t Binding;
+        std::uint32_t Stride;
+        bool Instance;
+    };
 }

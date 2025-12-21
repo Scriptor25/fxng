@@ -90,8 +90,14 @@ namespace glal
         const PipelineStage *Stages;
         std::uint32_t StageCount;
 
+        const VertexBinding *VertexBindings;
+        std::uint32_t VertexBindingCount;
+
         const VertexAttribute *VertexAttributes;
         std::uint32_t VertexAttributeCount;
+
+        PrimitiveTopology Topology;
+        bool PrimitiveRestartEnable;
 
         PipelineLayoutT *Layout;
 

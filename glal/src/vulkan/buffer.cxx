@@ -17,7 +17,9 @@ static std::uint32_t find_memory_type_index(
 glal::vulkan::BufferT::BufferT(DeviceT *device, const BufferDesc &desc)
     : m_Device(device),
       m_Size(desc.Size),
-      m_Usage(desc.Usage)
+      m_Usage(desc.Usage),
+      m_Handle(),
+      m_MemoryHandle()
 {
     VkBufferUsageFlags usage{};
     switch (m_Usage)
@@ -53,8 +55,6 @@ glal::vulkan::BufferT::BufferT(DeviceT *device, const BufferDesc &desc)
     const VkBufferCreateInfo buffer_create_info
     {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
         .size = m_Size,
         .usage = usage,
         .sharingMode = VK_SHARING_MODE_CONCURRENT,
@@ -72,7 +72,6 @@ glal::vulkan::BufferT::BufferT(DeviceT *device, const BufferDesc &desc)
     const VkMemoryAllocateInfo memory_allocate_info
     {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .pNext = nullptr,
         .allocationSize = memory_requirements.size,
         .memoryTypeIndex = find_memory_type_index(
             memory_properties,

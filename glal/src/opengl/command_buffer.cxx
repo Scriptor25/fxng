@@ -103,44 +103,48 @@ void glal::opengl::CommandBufferT::EndRenderPass()
     glDeleteFramebuffers(1, &m_Framebuffer);
 }
 
-void glal::opengl::CommandBufferT::BindPipeline(const Pipeline pipeline)
+void glal::opengl::CommandBufferT::BindPipeline(Pipeline pipeline)
 {
     const auto pipeline_impl = dynamic_cast<PipelineT *>(pipeline);
     glUseProgram(pipeline_impl->GetHandle());
 
-    pipeline_impl->LayoutVertexArray(m_VertexArray);
+    pipeline_impl->BindVertexArray(m_VertexArray);
 
     m_Pipeline = pipeline_impl;
 }
 
-void glal::opengl::CommandBufferT::SetViewport(const float x, const float y, const float w, const float h)
+void glal::opengl::CommandBufferT::SetViewport(
+    const float x,
+    const float y,
+    const float width,
+    const float height,
+    const float min_depth,
+    const float max_depth)
 {
     glViewport(
         static_cast<GLint>(x),
         static_cast<GLint>(y),
-        static_cast<GLsizei>(w),
-        static_cast<GLsizei>(h));
+        static_cast<GLsizei>(width),
+        static_cast<GLsizei>(height));
 }
 
-void glal::opengl::CommandBufferT::SetScissor(const int x, const int y, const int w, const int h)
+void glal::opengl::CommandBufferT::SetScissor(std::int32_t x, std::int32_t y, std::uint32_t width, std::uint32_t height)
 {
-    glScissor(x, y, w, h);
+    glScissor(x, y, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
 
-void glal::opengl::CommandBufferT::BindVertexBuffer(const Buffer buffer, const std::size_t offset)
+void glal::opengl::CommandBufferT::BindVertexBuffer(
+    Buffer buffer,
+    const std::uint32_t binding,
+    const std::size_t offset)
 {
     common::Assert(m_Pipeline, "pipeline not set");
 
     const auto buffer_impl = dynamic_cast<BufferT *>(buffer);
-    glVertexArrayVertexBuffer(
-        m_VertexArray,
-        0,
-        buffer_impl->GetHandle(),
-        static_cast<GLintptr>(offset),
-        static_cast<GLsizei>(m_Pipeline->GetVertexStride()));
+    m_Pipeline->BindVertexBuffer(m_VertexArray, buffer_impl->GetHandle(), binding, offset);
 }
 
-void glal::opengl::CommandBufferT::BindIndexBuffer(const Buffer buffer, const DataType type)
+void glal::opengl::CommandBufferT::BindIndexBuffer(Buffer buffer, const DataType type)
 {
     const auto buffer_impl = dynamic_cast<BufferT *>(buffer);
     glVertexArrayElementBuffer(m_VertexArray, buffer_impl->GetHandle());
@@ -165,8 +169,14 @@ void glal::opengl::CommandBufferT::Draw(const std::uint32_t vertex_count, const 
     common::Assert(m_Pipeline, "pipeline not set");
     common::Assert(m_Pipeline->GetType() == PipelineType_Graphics, "pipeline is not graphics");
 
+    GLenum mode;
+    TranslatePrimitiveTopology(m_Pipeline->GetTopology(), &mode);
+
     glBindVertexArray(m_VertexArray);
-    glDrawArrays(GL_TRIANGLES, static_cast<GLint>(first_vertex), static_cast<GLsizei>(vertex_count));
+    glDrawArrays(
+        mode,
+        static_cast<GLint>(first_vertex),
+        static_cast<GLsizei>(vertex_count));
 }
 
 void glal::opengl::CommandBufferT::DrawIndexed(const std::uint32_t index_count, const std::uint32_t first_index)
@@ -179,9 +189,12 @@ void glal::opengl::CommandBufferT::DrawIndexed(const std::uint32_t index_count, 
 
     TranslateDataType(m_IndexType, &size, &type, nullptr);
 
+    GLenum mode;
+    TranslatePrimitiveTopology(m_Pipeline->GetTopology(), &mode);
+
     glBindVertexArray(m_VertexArray);
     glDrawElementsBaseVertex(
-        GL_TRIANGLES,
+        mode,
         static_cast<GLsizei>(index_count),
         type,
         reinterpret_cast<void *>(first_index * size),
@@ -197,8 +210,8 @@ void glal::opengl::CommandBufferT::Dispatch(const std::uint32_t x, const std::ui
 }
 
 void glal::opengl::CommandBufferT::CopyBuffer(
-    const Buffer src_buffer,
-    const Buffer dst_buffer,
+    Buffer src_buffer,
+    Buffer dst_buffer,
     const std::size_t src_offset,
     const std::size_t dst_offset,
     const std::size_t size)
@@ -218,8 +231,8 @@ void glal::opengl::CommandBufferT::CopyBuffer(
 }
 
 void glal::opengl::CommandBufferT::CopyBufferToImage(
-    const Buffer src_buffer,
-    const Image dst_image)
+    Buffer src_buffer,
+    Image dst_image)
 {
     const auto src_buffer_impl = dynamic_cast<BufferT *>(src_buffer);
     const auto dst_image_impl = dynamic_cast<ImageT *>(dst_image);
@@ -235,7 +248,7 @@ void glal::opengl::CommandBufferT::CopyBufferToImage(
             dst_image_impl->GetHandle(),
             0,
             0,
-            dst_image_impl->GetExtent().Width,
+            static_cast<GLsizei>(dst_image_impl->GetExtent().Width),
             format,
             type,
             nullptr);
@@ -246,8 +259,8 @@ void glal::opengl::CommandBufferT::CopyBufferToImage(
             0,
             0,
             0,
-            dst_image_impl->GetExtent().Width,
-            dst_image_impl->GetExtent().Height,
+            static_cast<GLsizei>(dst_image_impl->GetExtent().Width),
+            static_cast<GLsizei>(dst_image_impl->GetExtent().Height),
             format,
             type,
             nullptr);
@@ -259,9 +272,9 @@ void glal::opengl::CommandBufferT::CopyBufferToImage(
             0,
             0,
             0,
-            dst_image_impl->GetExtent().Width,
-            dst_image_impl->GetExtent().Height,
-            dst_image_impl->GetExtent().Depth,
+            static_cast<GLsizei>(dst_image_impl->GetExtent().Width),
+            static_cast<GLsizei>(dst_image_impl->GetExtent().Height),
+            static_cast<GLsizei>(dst_image_impl->GetExtent().Depth),
             format,
             type,
             nullptr);

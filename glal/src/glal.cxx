@@ -1,6 +1,6 @@
 #include <glal/glal.hxx>
 
-void glal::DestroyInstance(const Instance instance)
+void glal::DestroyInstance(Instance instance)
 {
     delete instance;
 }

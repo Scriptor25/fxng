@@ -1,6 +1,6 @@
 #include <glal/vulkan.hxx>
 
-glal::vulkan::PhysicalDeviceT::PhysicalDeviceT(InstanceT *instance, const VkPhysicalDevice handle)
+glal::vulkan::PhysicalDeviceT::PhysicalDeviceT(InstanceT *instance, VkPhysicalDevice handle)
     : m_Instance(instance),
       m_Handle(handle)
 {
@@ -11,7 +11,7 @@ glal::Device glal::vulkan::PhysicalDeviceT::CreateDevice()
     return m_Devices.emplace_back(new DeviceT(this));
 }
 
-void glal::vulkan::PhysicalDeviceT::DestroyDevice(const Device device)
+void glal::vulkan::PhysicalDeviceT::DestroyDevice(Device device)
 {
     for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it)
         if (*it == device)

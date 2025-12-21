@@ -33,7 +33,7 @@ namespace glal::opengl
         std::uint32_t EnumeratePhysicalDevices(PhysicalDevice *devices) override;
 
     private:
-        Vec<PhysicalDeviceT> m_PhysicalDevices;
+        std::vector<PhysicalDeviceT> m_PhysicalDevices;
     };
 
     class PhysicalDeviceT final : public glal::PhysicalDeviceT
@@ -127,7 +127,7 @@ namespace glal::opengl
         explicit QueueT(DeviceT *device);
 
         void Submit(
-            CommandBuffer command_buffer,
+            const CommandBuffer *command_buffers,
             std::uint32_t command_buffer_count,
             Fence fence) override;
         void Present(Swapchain swapchain) override;
@@ -211,11 +211,11 @@ namespace glal::opengl
         void BeginRenderPass(const RenderPassDesc &desc) override;
         void EndRenderPass() override;
 
-        void SetViewport(float x, float y, float w, float h) override;
-        void SetScissor(int x, int y, int w, int h) override;
+        void SetViewport(float x, float y, float width, float height, float min_depth, float max_depth) override;
+        void SetScissor(std::int32_t x, std::int32_t y, std::uint32_t width, std::uint32_t height) override;
 
         void BindPipeline(Pipeline pipeline) override;
-        void BindVertexBuffer(Buffer buffer, std::size_t offset) override;
+        void BindVertexBuffer(Buffer buffer, std::uint32_t binding, std::size_t offset) override;
         void BindIndexBuffer(Buffer buffer, DataType type) override;
         void BindDescriptorSets(
             std::uint32_t first_set,
@@ -321,7 +321,7 @@ namespace glal::opengl
         [[nodiscard]] ImageFormat GetFormat() const override;
         [[nodiscard]] ImageType GetType() const override;
 
-        std::uint32_t GetImageHandle() const;
+        [[nodiscard]] std::uint32_t GetImageHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -418,19 +418,25 @@ namespace glal::opengl
         ~PipelineT() override;
 
         [[nodiscard]] PipelineType GetType() const override;
+        [[nodiscard]] PrimitiveTopology GetTopology() const override;
 
         [[nodiscard]] std::uint32_t GetHandle() const;
-        [[nodiscard]] std::uint32_t GetVertexStride() const;
 
-        void LayoutVertexArray(std::uint32_t vertex_array) const;
+        void BindVertexArray(std::uint32_t vertex_array) const;
+        void BindVertexBuffer(
+            std::uint32_t vertex_array,
+            std::uint32_t buffer,
+            std::uint32_t binding,
+            std::uint32_t offset) const;
 
     private:
         DeviceT *m_Device;
         PipelineLayoutT *m_Layout;
 
         PipelineType m_Type;
+        PrimitiveTopology m_Topology;
+        std::vector<VertexBinding> m_VertexBindings;
         std::vector<VertexAttribute> m_VertexAttributes;
-        std::uint32_t m_VertexStride;
 
         std::uint32_t m_Handle;
     };
@@ -446,4 +452,8 @@ namespace glal::opengl
         std::uint32_t *size,
         GLenum *type,
         GLboolean *normalized);
+
+    void TranslatePrimitiveTopology(
+        PrimitiveTopology primitive_topology,
+        GLenum *mode);
 }

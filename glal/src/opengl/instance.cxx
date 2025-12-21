@@ -105,7 +105,7 @@ glal::opengl::InstanceT::InstanceT(const InstanceDesc &desc)
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     }
 
-    m_PhysicalDevices.push_back(PhysicalDeviceT(this));
+    m_PhysicalDevices.emplace_back(this);
 }
 
 std::uint32_t glal::opengl::InstanceT::EnumeratePhysicalDevices(PhysicalDevice *devices)

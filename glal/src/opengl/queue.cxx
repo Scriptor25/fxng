@@ -6,9 +6,9 @@ glal::opengl::QueueT::QueueT(DeviceT *device)
 }
 
 void glal::opengl::QueueT::Submit(
-    CommandBuffer command_buffer,
+    const CommandBuffer *command_buffers,
     const std::uint32_t command_buffer_count,
-    const Fence fence)
+    Fence fence)
 {
     // noop
 
@@ -16,7 +16,7 @@ void glal::opengl::QueueT::Submit(
         fence->Reset();
 }
 
-void glal::opengl::QueueT::Present(const Swapchain swapchain)
+void glal::opengl::QueueT::Present(Swapchain swapchain)
 {
     swapchain->Present();
 }

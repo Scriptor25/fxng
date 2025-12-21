@@ -67,6 +67,9 @@ namespace glal
         virtual Swapchain CreateSwapchain(const SwapchainDesc &desc) = 0;
         virtual void DestroySwapchain(Swapchain swapchain) = 0;
 
+        virtual RenderPass CreateRenderPass(const RenderPassDesc &desc) = 0;
+        virtual void DestroyRenderPass(RenderPass render_pass) = 0;
+
         virtual CommandBuffer CreateCommandBuffer(CommandBufferUsage usage) = 0;
         virtual void DestroyCommandBuffer(CommandBuffer command_buffer) = 0;
 
@@ -136,6 +139,7 @@ namespace glal
         virtual ~PipelineT() = default;
 
         [[nodiscard]] virtual PipelineType GetType() const = 0;
+        [[nodiscard]] virtual PrimitiveTopology GetTopology() const = 0;
     };
 
     class ShaderModuleT
@@ -190,6 +194,12 @@ namespace glal
             Sampler sampler) = 0;
     };
 
+    class RenderPassT
+    {
+    public:
+        virtual ~RenderPassT() = default;
+    };
+
     class CommandBufferT
     {
     public:
@@ -201,11 +211,11 @@ namespace glal
         virtual void BeginRenderPass(const RenderPassDesc &desc) = 0;
         virtual void EndRenderPass() = 0;
 
-        virtual void SetViewport(float x, float y, float w, float h) = 0;
-        virtual void SetScissor(int x, int y, int w, int h) = 0;
+        virtual void SetViewport(float x, float y, float width, float height, float min_depth, float max_depth) = 0;
+        virtual void SetScissor(std::int32_t x, std::int32_t y, std::uint32_t width, std::uint32_t height) = 0;
 
         virtual void BindPipeline(Pipeline pipeline) = 0;
-        virtual void BindVertexBuffer(Buffer buffer, std::size_t offset) = 0;
+        virtual void BindVertexBuffer(Buffer buffer, std::uint32_t binding, std::size_t offset) = 0;
         virtual void BindIndexBuffer(Buffer buffer, DataType type) = 0;
         virtual void BindDescriptorSets(
             std::uint32_t first_set,
@@ -243,7 +253,7 @@ namespace glal
         virtual ~QueueT() = default;
 
         virtual void Submit(
-            CommandBuffer command_buffer,
+            const CommandBuffer *command_buffers,
             std::uint32_t command_buffer_count,
             Fence fence) = 0;
 

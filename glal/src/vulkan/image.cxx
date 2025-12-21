@@ -6,7 +6,8 @@ glal::vulkan::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
       m_Type(desc.Type),
       m_Extent(desc.Extent),
       m_MipLevelCount(desc.MipLevelCount),
-      m_ArrayLayerCount(desc.ArrayLayerCount)
+      m_ArrayLayerCount(desc.ArrayLayerCount),
+      m_Handle()
 {
     VkImageType image_type{};
     switch (m_Type)
@@ -51,26 +52,28 @@ glal::vulkan::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
         break;
     }
 
-    VkImageUsageFlags usage{}; // TODO
-    VkImageLayout layout{};    // TODO
-
     const VkImageCreateInfo image_create_info
     {
         .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
         .imageType = image_type,
         .format = format,
         .extent = { .width = m_Extent.Width, .height = m_Extent.Height, .depth = m_Extent.Depth },
         .mipLevels = m_MipLevelCount,
         .arrayLayers = m_ArrayLayerCount,
+        // TODO
         .samples = VK_SAMPLE_COUNT_1_BIT,
+        // TODO
         .tiling = VK_IMAGE_TILING_OPTIMAL,
-        .usage = usage,
+        // TODO
+        .usage = {},
+        // TODO
         .sharingMode = VK_SHARING_MODE_CONCURRENT,
+        // TODO
         .queueFamilyIndexCount = 0,
+        // TODO
         .pQueueFamilyIndices = nullptr,
-        .initialLayout = layout,
+        // TODO
+        .initialLayout = {},
     };
     vkCreateImage(device->GetHandle(), &image_create_info, nullptr, &m_Handle);
 }

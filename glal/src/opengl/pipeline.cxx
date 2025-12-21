@@ -5,24 +5,15 @@ glal::opengl::PipelineT::PipelineT(DeviceT *device, const PipelineDesc &desc)
     : m_Device(device),
       m_Layout(dynamic_cast<PipelineLayoutT *>(desc.Layout)),
       m_Type(desc.Type),
-      m_VertexAttributes(desc.VertexAttributeCount),
-      m_VertexStride()
+      m_Topology(desc.Topology),
+      m_VertexBindings(desc.VertexBindings, desc.VertexBindings + desc.VertexBindingCount),
+      m_VertexAttributes(desc.VertexAttributes, desc.VertexAttributes + desc.VertexAttributeCount)
 {
-    // TODO: depth and blend
+    // TODO
     (void) desc.DepthTest;
     (void) desc.DepthWrite;
     (void) desc.BlendEnable;
-
-    for (std::uint32_t i = 0; i < desc.VertexAttributeCount; ++i)
-    {
-        const auto vertex_attribute = desc.VertexAttributes + i;
-        m_VertexAttributes[i] = *vertex_attribute;
-
-        std::uint32_t size;
-        TranslateDataType(vertex_attribute->Type, &size, nullptr, nullptr);
-
-        m_VertexStride += size * vertex_attribute->Count;
-    }
+    (void) desc.PrimitiveRestartEnable;
 
     m_Handle = glCreateProgram();
 
@@ -73,12 +64,12 @@ glal::PipelineType glal::opengl::PipelineT::GetType() const
     return m_Type;
 }
 
-std::uint32_t glal::opengl::PipelineT::GetVertexStride() const
+glal::PrimitiveTopology glal::opengl::PipelineT::GetTopology() const
 {
-    return m_VertexStride;
+    return m_Topology;
 }
 
-void glal::opengl::PipelineT::LayoutVertexArray(const std::uint32_t vertex_array) const
+void glal::opengl::PipelineT::BindVertexArray(const std::uint32_t vertex_array) const
 {
     for (auto &vertex_attribute : m_VertexAttributes)
     {
@@ -97,6 +88,25 @@ void glal::opengl::PipelineT::LayoutVertexArray(const std::uint32_t vertex_array
             normalized,
             vertex_attribute.Offset);
     }
+}
+
+void glal::opengl::PipelineT::BindVertexBuffer(
+    const std::uint32_t vertex_array,
+    const std::uint32_t buffer,
+    const std::uint32_t binding,
+    const std::uint32_t offset) const
+{
+    for (auto &vertex_binding : m_VertexBindings)
+        if (vertex_binding.Binding == binding)
+        {
+            glVertexArrayVertexBuffer(
+                vertex_array,
+                vertex_binding.Binding,
+                buffer,
+                static_cast<GLintptr>(offset),
+                static_cast<GLsizei>(vertex_binding.Stride));
+            break;
+        }
 }
 
 std::uint32_t glal::opengl::PipelineT::GetHandle() const

@@ -9,7 +9,7 @@ glal::opengl::DescriptorSetT::DescriptorSetT(DeviceT *device, const DescriptorSe
         m_Layouts.at(i) = dynamic_cast<DescriptorSetLayoutT *>(desc.DescriptorSetLayouts[i]);
 }
 
-void glal::opengl::DescriptorSetT::BindBuffer(const std::uint32_t binding, const Buffer buffer)
+void glal::opengl::DescriptorSetT::BindBuffer(const std::uint32_t binding, Buffer buffer)
 {
     const auto buffer_impl = dynamic_cast<BufferT *>(buffer);
 
@@ -42,7 +42,7 @@ void glal::opengl::DescriptorSetT::BindBuffer(const std::uint32_t binding, const
 
 void glal::opengl::DescriptorSetT::BindBuffer(
     const std::uint32_t binding,
-    const Buffer buffer,
+    Buffer buffer,
     const std::uint32_t offset,
     const std::uint32_t size)
 {
@@ -77,8 +77,8 @@ void glal::opengl::DescriptorSetT::BindBuffer(
 
 void glal::opengl::DescriptorSetT::BindImageView(
     const std::uint32_t binding,
-    const ImageView image_view,
-    const Sampler sampler)
+    ImageView image_view,
+    Sampler sampler)
 {
     const auto image_view_impl = dynamic_cast<ImageViewT *>(image_view);
     const auto sampler_impl = dynamic_cast<SamplerT *>(sampler);

@@ -105,13 +105,13 @@ int main()
 
     glfwInit();
 
-    constexpr glal::InstanceDesc instance_desc
+    const glal::InstanceDesc instance_desc
     {
         .EnableValidation = true,
         .ApplicationName = "Hello World",
     };
 
-#if 0
+#if 1
     const auto window = create_window_opengl();
     const auto instance = glal::CreateInstanceOpenGL(instance_desc);
 #else
@@ -143,7 +143,7 @@ int main()
             .ImageCount = 2,
         });
 
-    constexpr std::array descriptor_bindings
+    const std::array descriptor_bindings
     {
         glal::DescriptorBinding
         {
@@ -190,7 +190,17 @@ int main()
         },
     };
 
-    constexpr std::array vertex_attributes
+    const std::array vertex_bindings
+    {
+        glal::VertexBinding
+        {
+            .Binding = 0,
+            .Stride = sizeof(Vertex),
+            .Instance = false,
+        },
+    };
+
+    const std::array vertex_attributes
     {
         glal::VertexAttribute
         {
@@ -215,8 +225,12 @@ int main()
             .Type = glal::PipelineType_Graphics,
             .Stages = pipeline_stages.data(),
             .StageCount = pipeline_stages.size(),
+            .VertexBindings = vertex_bindings.data(),
+            .VertexBindingCount = vertex_bindings.size(),
             .VertexAttributes = vertex_attributes.data(),
             .VertexAttributeCount = vertex_attributes.size(),
+            .Topology = glal::VertexTopology_TriangleList,
+            .PrimitiveRestartEnable = false,
             .Layout = pipeline_layout,
             .DepthTest = false,
             .DepthWrite = false,
@@ -254,7 +268,7 @@ int main()
         glfwPollEvents();
 
         const auto current_time = std::chrono::high_resolution_clock::now();
-        const auto time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
+        const auto time = std::chrono::duration<float>(current_time - start_time).count();
 
         const auto swapchain = application_state.swapchain;
 
@@ -291,6 +305,8 @@ int main()
             .ColorCount = 1,
             .Depth = nullptr,
             .DepthCount = 0,
+            .Stencil = nullptr,
+            .StencilCount = 0,
         };
 
         command_buffer->Begin();
@@ -301,7 +317,9 @@ int main()
             0.f,
             0.f,
             static_cast<float>(swapchain->GetExtent().Width),
-            static_cast<float>(swapchain->GetExtent().Height));
+            static_cast<float>(swapchain->GetExtent().Height),
+            0.f,
+            1.f);
         command_buffer->SetScissor(
             0,
             0,
@@ -309,16 +327,35 @@ int main()
             swapchain->GetExtent().Height);
         command_buffer->BindPipeline(pipeline);
         command_buffer->BindDescriptorSets(0, 1, &descriptor_set);
-        command_buffer->BindVertexBuffer(vertex_buffer, 0);
+        command_buffer->BindVertexBuffer(vertex_buffer, 0, 0);
         command_buffer->Draw(sizeof(vertices) / sizeof(Vertex), 0);
         command_buffer->EndRenderPass();
 
         command_buffer->Transition(image_view->GetImage(), glal::ResourceState_Present);
         command_buffer->End();
 
-        graphics_queue->Submit(command_buffer, 1, fence);
+        graphics_queue->Submit(&command_buffer, 1, fence);
         present_queue->Present(swapchain);
     }
+
+    device->DestroyBuffer(vertex_buffer);
+    device->DestroyBuffer(uniform_buffer);
+
+    device->DestroySwapchain(application_state.swapchain);
+
+    device->DestroyShaderModule(vertex_shader);
+    device->DestroyShaderModule(fragment_shader);
+
+    device->DestroyPipeline(pipeline);
+    device->DestroyPipelineLayout(pipeline_layout);
+
+    device->DestroyDescriptorSetLayout(descriptor_set_layout);
+    device->DestroyDescriptorSet(descriptor_set);
+
+    device->DestroyCommandBuffer(command_buffer);
+    device->DestroyFence(fence);
+
+    physical_device->DestroyDevice(device);
 
     glal::DestroyInstance(instance);
 

@@ -65,9 +65,6 @@ void glal::opengl::TranslateDataType(
 {
     switch (data_type)
     {
-    case DataType_None:
-        common::Fatal("data type is not set");
-
     case DataType_UInt8:
         size && ((*size = sizeof(GLubyte)));
         type && ((*type = GL_UNSIGNED_BYTE));
@@ -118,5 +115,34 @@ void glal::opengl::TranslateDataType(
         type && ((*type = GL_DOUBLE));
         normalized && ((*normalized = GL_FALSE));
         break;
+    default:
+        common::Fatal("data type not supported");
+    }
+}
+
+void glal::opengl::TranslatePrimitiveTopology(const PrimitiveTopology primitive_topology, GLenum *mode)
+{
+    switch (primitive_topology)
+    {
+    case VertexTopology_PointList:
+        mode && ((*mode = GL_POINTS));
+        break;
+    case VertexTopology_LineList:
+        mode && ((*mode = GL_LINES));
+        break;
+    case VertexTopology_LineStrip:
+        mode && ((*mode = GL_LINE_STRIP));
+        break;
+    case VertexTopology_TriangleList:
+        mode && ((*mode = GL_TRIANGLES));
+        break;
+    case VertexTopology_TriangleStrip:
+        mode && ((*mode = GL_TRIANGLE_STRIP));
+        break;
+    case VertexTopology_TriangleFan:
+        mode && ((*mode = GL_TRIANGLE_FAN));
+        break;
+    default:
+        common::Fatal("primitive topology not supported");
     }
 }

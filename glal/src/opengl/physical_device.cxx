@@ -1,3 +1,4 @@
+#include <common/log.hxx>
 #include <glal/opengl.hxx>
 
 glal::opengl::PhysicalDeviceT::PhysicalDeviceT(InstanceT *instance)
@@ -14,8 +15,7 @@ glal::opengl::PhysicalDeviceT::PhysicalDeviceT(InstanceT *instance)
 
 glal::opengl::PhysicalDeviceT::~PhysicalDeviceT()
 {
-    for (const auto device : m_Devices)
-        delete device;
+    common::Assert(m_Devices.empty(), "not all devices were explicitly destroyed");
 }
 
 glal::Device glal::opengl::PhysicalDeviceT::CreateDevice()
@@ -23,15 +23,19 @@ glal::Device glal::opengl::PhysicalDeviceT::CreateDevice()
     return m_Devices.emplace_back(new DeviceT(this));
 }
 
-void glal::opengl::PhysicalDeviceT::DestroyDevice(const Device device)
+void glal::opengl::PhysicalDeviceT::DestroyDevice(Device device)
 {
     for (auto it = m_Devices.begin(); it != m_Devices.end(); ++it)
         if (*it == device)
         {
             m_Devices.erase(it);
             delete device;
-            break;
+            return;
         }
+    common::Fatal(
+        "device {} is not owned by physical device {}",
+        static_cast<const void *>(device),
+        static_cast<const void *>(this));
 }
 
 bool glal::opengl::PhysicalDeviceT::Supports(const DeviceFeature feature) const

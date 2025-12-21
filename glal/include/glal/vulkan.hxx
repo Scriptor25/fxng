@@ -34,7 +34,7 @@ namespace glal::vulkan
 
     private:
         VkInstance m_Handle;
-        Vec<PhysicalDeviceT> m_PhysicalDevices;
+        std::vector<PhysicalDeviceT> m_PhysicalDevices;
     };
 
     class PhysicalDeviceT final : public glal::PhysicalDeviceT
@@ -61,6 +61,7 @@ namespace glal::vulkan
     {
     public:
         explicit DeviceT(PhysicalDeviceT *physical_device);
+        ~DeviceT() override;
 
         Buffer CreateBuffer(const BufferDesc &desc) override;
         void DestroyBuffer(Buffer buffer) override;
@@ -199,17 +200,26 @@ namespace glal::vulkan
 
     private:
         DeviceT *m_Device;
+
+        VkSampler m_Handle;
     };
 
     class ShaderModuleT final : public glal::ShaderModuleT
     {
     public:
         explicit ShaderModuleT(DeviceT *device, const ShaderModuleDesc &desc);
+        ~ShaderModuleT() override;
 
         [[nodiscard]] ShaderStage GetStage() const override;
 
+        VkShaderModule GetHandle() const;
+
     private:
         DeviceT *m_Device;
+
+        ShaderStage m_Stage;
+
+        VkShaderModule m_Handle;
     };
 
     class PipelineLayoutT final : public glal::PipelineLayoutT
@@ -220,19 +230,32 @@ namespace glal::vulkan
         [[nodiscard]] DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const override;
         [[nodiscard]] std::uint32_t GetDescriptorSetLayoutCount() const override;
 
+        VkPipelineLayout GetHandle() const;
+
     private:
         DeviceT *m_Device;
+
+        VkPipelineLayout m_Handle;
     };
 
     class PipelineT final : public glal::PipelineT
     {
     public:
         explicit PipelineT(DeviceT *device, const PipelineDesc &desc);
+        ~PipelineT() override;
 
         [[nodiscard]] PipelineType GetType() const override;
+        [[nodiscard]] PrimitiveTopology GetTopology() const override;
+
+        VkPipeline GetHandle() const;
 
     private:
         DeviceT *m_Device;
+
+        PipelineType m_Type;
+        PrimitiveTopology m_Topology;
+
+        VkPipeline m_Handle;
     };
 
     class DescriptorSetLayoutT final : public glal::DescriptorSetLayoutT
@@ -292,6 +315,7 @@ namespace glal::vulkan
     {
     public:
         explicit CommandBufferT(DeviceT *device, CommandBufferUsage usage);
+        ~CommandBufferT() override;
 
         void Begin() override;
         void End() override;
@@ -299,12 +323,12 @@ namespace glal::vulkan
         void BeginRenderPass(const RenderPassDesc &desc) override;
         void EndRenderPass() override;
 
-        void SetViewport(float x, float y, float w, float h) override;
-        void SetScissor(int x, int y, int w, int h) override;
+        void SetViewport(float x, float y, float width, float height, float min_depth, float max_depth) override;
+        void SetScissor(std::int32_t x, std::int32_t y, std::uint32_t width, std::uint32_t height) override;
 
         void BindPipeline(Pipeline pipeline) override;
 
-        void BindVertexBuffer(Buffer buffer, std::size_t offset) override;
+        void BindVertexBuffer(Buffer buffer, std::uint32_t binding, std::size_t offset) override;
         void BindIndexBuffer(Buffer buffer, DataType type) override;
 
         void BindDescriptorSets(
@@ -329,28 +353,41 @@ namespace glal::vulkan
 
     private:
         DeviceT *m_Device;
+
+        VkCommandPool m_PoolHandle;
+        VkCommandBuffer m_Handle;
     };
 
     class FenceT final : public glal::FenceT
     {
     public:
         explicit FenceT(DeviceT *device);
+        ~FenceT() override;
 
         void Wait() override;
         void Reset() override;
 
     private:
         DeviceT *m_Device;
+
+        VkFence m_Handle;
     };
 
     class QueueT final : public glal::QueueT
     {
     public:
         void Submit(
-            CommandBuffer command_buffer,
+            const CommandBuffer *command_buffers,
             std::uint32_t command_buffer_count,
             Fence fence) override;
 
         void Present(Swapchain swapchain) override;
     };
+
+    VkFilter ToVkFilter(Filter filter);
+    VkSamplerAddressMode ToVkAddressMode(AddressMode address_mode);
+    VkPipelineBindPoint ToVkPipelineBindPoint(PipelineType pipeline_type);
+    VkShaderStageFlagBits ToVkShaderStage(ShaderStage shader_stage);
+    VkFormat ToVkFormat(DataType data_type, std::uint32_t count);
+    VkPrimitiveTopology ToVkPrimitiveTopology(PrimitiveTopology primitive_topology);
 }

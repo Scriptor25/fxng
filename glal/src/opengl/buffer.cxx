@@ -8,7 +8,7 @@ glal::opengl::BufferT::BufferT(DeviceT *device, const BufferDesc &desc)
       m_Memory(desc.Memory),
       m_Handle()
 {
-    GLbitfield flags;
+    GLbitfield flags{};
     switch (m_Memory)
     {
     case MemoryUsage_HostToDevice:
@@ -43,7 +43,7 @@ glal::BufferUsage glal::opengl::BufferT::GetUsage() const
 
 void *glal::opengl::BufferT::Map()
 {
-    GLenum access;
+    GLenum access{};
     switch (m_Memory)
     {
     case MemoryUsage_HostToDevice:

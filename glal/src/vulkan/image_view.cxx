@@ -4,7 +4,8 @@ glal::vulkan::ImageViewT::ImageViewT(DeviceT *device, const ImageViewDesc &desc)
     : m_Device(device),
       m_Image(dynamic_cast<ImageT *>(desc.ImageResource)),
       m_Format(desc.Format),
-      m_Type(desc.Type)
+      m_Type(desc.Type),
+      m_Handle()
 {
     VkImageViewType view_type{};
     switch (desc.Type)
@@ -52,8 +53,6 @@ glal::vulkan::ImageViewT::ImageViewT(DeviceT *device, const ImageViewDesc &desc)
     const VkImageViewCreateInfo image_view_create_info
     {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
         .image = m_Image->GetHandle(),
         .viewType = view_type,
         .format = format,
@@ -64,7 +63,8 @@ glal::vulkan::ImageViewT::ImageViewT(DeviceT *device, const ImageViewDesc &desc)
             .a = VK_COMPONENT_SWIZZLE_IDENTITY,
         },
         .subresourceRange = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, // TODO
+            // TODO
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .baseMipLevel = 0,
             .levelCount = m_Image->GetMipLevelCount(),
             .baseArrayLayer = 0,
