@@ -102,3 +102,8 @@ void glal::vulkan::BufferT::Unmap()
 {
     vkUnmapMemory(m_Device->GetHandle(), m_MemoryHandle);
 }
+
+VkBuffer glal::vulkan::BufferT::GetHandle() const
+{
+    return m_Handle;
+}

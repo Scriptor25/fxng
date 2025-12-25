@@ -225,6 +225,31 @@ VkFormat glal::vulkan::ToVkFormat(const DataType data_type, const std::uint32_t 
     }
 }
 
+VkFormat glal::vulkan::ToVkFormat(const ImageFormat image_format)
+{
+    switch (image_format)
+    {
+    case ImageFormat_RGBA8_UNorm:
+        return VK_FORMAT_R8G8B8_UNORM;
+    case ImageFormat_RGBA8_SRGB:
+        return VK_FORMAT_R8G8B8A8_SRGB;
+    case ImageFormat_BGRA8_UNorm:
+        return VK_FORMAT_B8G8R8_UNORM;
+    case ImageFormat_RG16F:
+        return VK_FORMAT_R16G16B16_SFLOAT;
+    case ImageFormat_RGBA16F:
+        return VK_FORMAT_R16G16B16A16_SFLOAT;
+    case ImageFormat_RGBA32F:
+        return VK_FORMAT_R32G32B32A32_SFLOAT;
+    case ImageFormat_D24S8:
+        return VK_FORMAT_D24_UNORM_S8_UINT;
+    case ImageFormat_D32F:
+        return VK_FORMAT_D32_SFLOAT;
+    default:
+        common::Fatal("image format not supported");
+    }
+}
+
 VkPrimitiveTopology glal::vulkan::ToVkPrimitiveTopology(const PrimitiveTopology primitive_topology)
 {
     switch (primitive_topology)
@@ -243,5 +268,26 @@ VkPrimitiveTopology glal::vulkan::ToVkPrimitiveTopology(const PrimitiveTopology 
         return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
     default:
         common::Fatal("primitive topology not supported");
+    }
+}
+
+VkDescriptorType glal::vulkan::ToVkDescriptorType(const DescriptorType descriptor_type)
+{
+    switch (descriptor_type)
+    {
+    case DescriptorType_UniformBuffer:
+        return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case DescriptorType_StorageBuffer:
+        return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    case DescriptorType_CombinedImageSampler:
+        return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    case DescriptorType_SampledImage:
+        return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    case DescriptorType_StorageImage:
+        return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+    case DescriptorType_Sampler:
+        return VK_DESCRIPTOR_TYPE_SAMPLER;
+    default:
+        common::Fatal("descriptor type not supported");
     }
 }

@@ -38,6 +38,11 @@ void glal::opengl::PhysicalDeviceT::DestroyDevice(Device device)
         static_cast<const void *>(this));
 }
 
+glal::Instance glal::opengl::PhysicalDeviceT::GetInstance() const
+{
+    return m_Instance;
+}
+
 bool glal::opengl::PhysicalDeviceT::Supports(const DeviceFeature feature) const
 {
     return feature == DeviceFeature_GeometryShader

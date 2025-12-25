@@ -5,8 +5,9 @@ glal::opengl::CommandBufferT::CommandBufferT(DeviceT *device, const CommandBuffe
     : m_Device(device),
       m_Usage(usage),
       m_Pipeline(nullptr),
+      m_RenderPass(nullptr),
+      m_Framebuffer(nullptr),
       m_VertexArray(0),
-      m_Framebuffer(0),
       m_IndexType(DataType_None)
 {
 }
@@ -27,80 +28,119 @@ void glal::opengl::CommandBufferT::End()
     m_IndexType = DataType_None;
 }
 
-void glal::opengl::CommandBufferT::BeginRenderPass(const RenderPassDesc &desc)
+void glal::opengl::CommandBufferT::BeginRenderPass(RenderPass render_pass, Framebuffer framebuffer)
 {
-    common::Assert(desc.DepthCount <= 1, "opengl only supports one depth attachment per render pass");
-    common::Assert(desc.StencilCount <= 1, "opengl only supports one stencil attachment per render pass");
+    m_RenderPass = dynamic_cast<RenderPassT *>(render_pass);
+    m_Framebuffer = dynamic_cast<FramebufferT *>(framebuffer);
 
-    glCreateFramebuffers(1, &m_Framebuffer);
+    std::vector<GLenum> attachments(render_pass->GetAttachmentCount());
 
-    std::vector<GLenum> attachments;
+    auto color_attachment_count = 0u;
+    auto has_depth_stencil_attachment = false;
 
-    for (std::uint32_t i = 0; i < desc.ColorCount; ++i)
+    for (std::uint32_t i = 0; i < attachments.size(); ++i)
     {
-        const auto attachment = desc.Color + i;
-        const auto image_view_impl = dynamic_cast<ImageViewT *>(attachment->View);
+        auto &attachment = render_pass->GetAttachment(i);
 
-        glNamedFramebufferTexture(m_Framebuffer, GL_COLOR_ATTACHMENT0 + i, image_view_impl->GetImageHandle(), 0);
+        const auto image_view_impl = dynamic_cast<ImageViewT *>(m_Framebuffer->GetAttachment(i));
 
-        attachments.emplace_back(GL_COLOR_ATTACHMENT0 + i);
+        GLenum attachment_type, buffer_type;
+        if (attachment.Type & AttachmentType_Color)
+        {
+            attachment_type = GL_COLOR_ATTACHMENT0 + (color_attachment_count++);
+            buffer_type = GL_COLOR;
+        }
+        else if (has_depth_stencil_attachment)
+        {
+            common::Fatal("opengl only supports a single depth and/or stencil attachment at once");
+        }
+        else if (attachment.Type & AttachmentType_Depth)
+        {
+            if (attachment.Type & AttachmentType_Stencil)
+            {
+                has_depth_stencil_attachment = true;
+                attachment_type = GL_DEPTH_STENCIL_ATTACHMENT;
+                buffer_type = GL_DEPTH_STENCIL;
+            }
+            else
+            {
+                has_depth_stencil_attachment = true;
+                attachment_type = GL_DEPTH_ATTACHMENT;
+                buffer_type = GL_DEPTH;
+            }
+        }
+        else if (attachment.Type & AttachmentType_Stencil)
+        {
+            has_depth_stencil_attachment = true;
+            attachment_type = GL_STENCIL_ATTACHMENT;
+            buffer_type = GL_STENCIL;
+        }
+        else
+        {
+            common::Fatal("attachment type not supported");
+        }
 
-        if (attachment->Clear)
-            glClearNamedFramebufferfv(
-                m_Framebuffer,
-                GL_COLOR,
-                static_cast<GLint>(i),
-                attachment->Value.Color);
+        glNamedFramebufferTexture(
+            m_Framebuffer->GetHandle(),
+            attachment_type,
+            image_view_impl->GetImageHandle(),
+            0);
+        attachments[i] = attachment_type;
+
+        if (attachment.Clear)
+        {
+            switch (attachment.Mask)
+            {
+            case ClearValueMask_Color_Float:
+                glClearNamedFramebufferfv(
+                    m_Framebuffer->GetHandle(),
+                    buffer_type,
+                    static_cast<GLint>(i),
+                    attachment.Value.Color.Float);
+                break;
+            case ClearValueMask_Color_Int:
+                glClearNamedFramebufferiv(
+                    m_Framebuffer->GetHandle(),
+                    buffer_type,
+                    static_cast<GLint>(i),
+                    attachment.Value.Color.Int);
+                break;
+            case ClearValueMask_Color_UInt:
+                glClearNamedFramebufferuiv(
+                    m_Framebuffer->GetHandle(),
+                    buffer_type,
+                    static_cast<GLint>(i),
+                    attachment.Value.Color.UInt);
+                break;
+            case ClearValueMask_DepthStencil:
+                glClearNamedFramebufferfi(
+                    m_Framebuffer->GetHandle(),
+                    buffer_type,
+                    static_cast<GLint>(i),
+                    attachment.Value.DepthStencil.Depth,
+                    static_cast<GLint>(attachment.Value.DepthStencil.Stencil));
+                break;
+            }
+        }
     }
 
-    for (std::uint32_t i = 0; i < desc.DepthCount; ++i)
-    {
-        const auto attachment = desc.Depth + i;
-        const auto image_view_impl = dynamic_cast<ImageViewT *>(attachment->View);
+    glNamedFramebufferDrawBuffers(
+        m_Framebuffer->GetHandle(),
+        static_cast<GLsizei>(attachments.size()),
+        attachments.data());
 
-        glNamedFramebufferTexture(m_Framebuffer, GL_DEPTH_ATTACHMENT, image_view_impl->GetImageHandle(), 0);
+    const auto status = glCheckNamedFramebufferStatus(m_Framebuffer->GetHandle(), GL_FRAMEBUFFER);
+    common::Assert(status == GL_FRAMEBUFFER_COMPLETE, "incomplete framebuffer");
 
-        attachments.emplace_back(GL_DEPTH_ATTACHMENT);
-
-        if (attachment->Clear)
-            glClearNamedFramebufferfi(
-                m_Framebuffer,
-                GL_DEPTH,
-                static_cast<GLint>(i),
-                attachment->Value.Depth,
-                0);
-    }
-
-    for (std::uint32_t i = 0; i < desc.StencilCount; ++i)
-    {
-        const auto attachment = desc.Stencil + i;
-        const auto image_view_impl = dynamic_cast<ImageViewT *>(attachment->View);
-
-        glNamedFramebufferTexture(m_Framebuffer, GL_STENCIL_ATTACHMENT, image_view_impl->GetImageHandle(), 0);
-
-        attachments.emplace_back(GL_STENCIL_ATTACHMENT);
-
-        if (attachment->Clear)
-            glClearNamedFramebufferfi(
-                m_Framebuffer,
-                GL_STENCIL,
-                static_cast<GLint>(i),
-                0.f,
-                attachment->Value.Stencil);
-    }
-
-    glNamedFramebufferDrawBuffers(m_Framebuffer, static_cast<GLsizei>(attachments.size()), attachments.data());
-
-    const auto ok = glCheckNamedFramebufferStatus(m_Framebuffer, GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-    common::Assert(ok, "incomplete framebuffer");
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer->GetHandle());
 }
 
 void glal::opengl::CommandBufferT::EndRenderPass()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteFramebuffers(1, &m_Framebuffer);
+
+    m_RenderPass = nullptr;
+    m_Framebuffer = nullptr;
 }
 
 void glal::opengl::CommandBufferT::BindPipeline(Pipeline pipeline)

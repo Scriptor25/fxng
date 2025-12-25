@@ -35,7 +35,7 @@ static constexpr Vertex vertices[] = {
     { { 0.5f, -0.28867513f }, { 0, 0, 1 } },
 };
 
-static glal::ShaderModuleT *load_shader_module(
+static glal::ShaderModule load_shader_module(
     glal::Device device,
     glal::ShaderStage stage,
     std::filesystem::path path)
@@ -167,11 +167,7 @@ int main()
             .DescriptorSetLayoutCount = 1,
         });
 
-    const auto descriptor_set = device->CreateDescriptorSet(
-        {
-            .DescriptorSetLayouts = &descriptor_set_layout,
-            .DescriptorSetLayoutCount = 1,
-        });
+    const auto descriptor_set = device->CreateDescriptorSet({ .Layout = descriptor_set_layout });
 
     const auto vertex_shader = load_shader_module(device, glal::ShaderStage_Vertex, "vertex.spv");
     const auto fragment_shader = load_shader_module(device, glal::ShaderStage_Fragment, "fragment.spv");
@@ -220,6 +216,21 @@ int main()
         },
     };
 
+    const glal::Attachment color_attachment
+    {
+        .Type = glal::AttachmentType_Color,
+
+        .Clear = true,
+        .Mask = glal::ClearValueMask_Color_Float,
+        .Value = { .Color = { 0.05f, 0.05f, 0.10f, 1.00f } },
+    };
+
+    const auto render_pass = device->CreateRenderPass(
+        {
+            .Attachments = &color_attachment,
+            .AttachmentCount = 1,
+        });
+
     const auto pipeline = device->CreatePipeline(
         {
             .Type = glal::PipelineType_Graphics,
@@ -232,6 +243,7 @@ int main()
             .Topology = glal::VertexTopology_TriangleList,
             .PrimitiveRestartEnable = false,
             .Layout = pipeline_layout,
+            .Pass = render_pass,
             .DepthTest = false,
             .DepthWrite = false,
             .BlendEnable = false,
@@ -292,27 +304,17 @@ int main()
         const auto image_index = swapchain->AcquireNextImage(fence);
         const auto image_view = swapchain->GetImageView(image_index);
 
-        const glal::RenderTarget color_target
-        {
-            .View = image_view,
-            .Clear = true,
-            .Value = { .Color = { 0.05f, 0.05f, 0.10f, 1.00f } },
-        };
-
-        const glal::RenderPassDesc render_pass
-        {
-            .Color = &color_target,
-            .ColorCount = 1,
-            .Depth = nullptr,
-            .DepthCount = 0,
-            .Stencil = nullptr,
-            .StencilCount = 0,
-        };
+        const auto framebuffer = device->CreateFramebuffer(
+            {
+                .Attachments = &image_view,
+                .AttachmentCount = 1,
+                .Pass = render_pass,
+            });
 
         command_buffer->Begin();
         command_buffer->Transition(image_view->GetImage(), glal::ResourceState_RenderTarget);
 
-        command_buffer->BeginRenderPass(render_pass);
+        command_buffer->BeginRenderPass(render_pass, framebuffer);
         command_buffer->SetViewport(
             0.f,
             0.f,

@@ -22,15 +22,22 @@ void glal::vulkan::PhysicalDeviceT::DestroyDevice(Device device)
         }
 }
 
+glal::Instance glal::vulkan::PhysicalDeviceT::GetInstance() const
+{
+    return m_Instance;
+}
+
 bool glal::vulkan::PhysicalDeviceT::Supports(DeviceFeature feature) const
 {
-    return true; // TODO
+    // TODO: features
+    return true;
 }
 
 const glal::DeviceLimits &glal::vulkan::PhysicalDeviceT::GetLimits() const
 {
+    // TODO: limits
     static DeviceLimits limits;
-    return limits; // TODO
+    return limits;
 }
 
 VkPhysicalDevice glal::vulkan::PhysicalDeviceT::GetHandle() const

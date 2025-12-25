@@ -32,8 +32,11 @@ namespace glal::vulkan
 
         std::uint32_t EnumeratePhysicalDevices(PhysicalDevice *devices) override;
 
+        VkInstance GetHandle() const;
+
     private:
         VkInstance m_Handle;
+        VkDebugUtilsMessengerEXT m_DebugUtilsMessenger;
         std::vector<PhysicalDeviceT> m_PhysicalDevices;
     };
 
@@ -45,10 +48,12 @@ namespace glal::vulkan
         Device CreateDevice() override;
         void DestroyDevice(Device device) override;
 
+        Instance GetInstance() const override;
+
         [[nodiscard]] bool Supports(DeviceFeature feature) const override;
         [[nodiscard]] const DeviceLimits &GetLimits() const override;
 
-        VkPhysicalDevice GetHandle() const;
+        [[nodiscard]] VkPhysicalDevice GetHandle() const;
 
     private:
         InstanceT *m_Instance;
@@ -62,6 +67,8 @@ namespace glal::vulkan
     public:
         explicit DeviceT(PhysicalDeviceT *physical_device);
         ~DeviceT() override;
+
+        [[nodiscard]] PhysicalDeviceT *GetPhysicalDevice() const override;
 
         Buffer CreateBuffer(const BufferDesc &desc) override;
         void DestroyBuffer(Buffer buffer) override;
@@ -93,6 +100,12 @@ namespace glal::vulkan
         Swapchain CreateSwapchain(const SwapchainDesc &desc) override;
         void DestroySwapchain(Swapchain swapchain) override;
 
+        RenderPass CreateRenderPass(const RenderPassDesc &desc) override;
+        void DestroyRenderPass(RenderPass render_pass) override;
+
+        Framebuffer CreateFramebuffer(const FramebufferDesc &desc) override;
+        void DestroyFramebuffer(Framebuffer framebuffer) override;
+
         CommandBuffer CreateCommandBuffer(CommandBufferUsage usage) override;
         void DestroyCommandBuffer(CommandBuffer command_buffer) override;
 
@@ -104,8 +117,7 @@ namespace glal::vulkan
         [[nodiscard]] bool Supports(DeviceFeature feature) const override;
         [[nodiscard]] const DeviceLimits &GetLimits() const override;
 
-        PhysicalDeviceT *GetPhysicalDevice() const;
-        VkDevice GetHandle() const;
+        [[nodiscard]] VkDevice GetHandle() const;
 
     private:
         PhysicalDeviceT *m_PhysicalDevice;
@@ -120,6 +132,8 @@ namespace glal::vulkan
         std::vector<DescriptorSetLayoutT *> m_DescriptorSetLayouts;
         std::vector<DescriptorSetT *> m_DescriptorSets;
         std::vector<SwapchainT *> m_Swapchains;
+        std::vector<RenderPassT *> m_RenderPasses;
+        std::vector<FramebufferT *> m_Framebuffers;
         std::vector<CommandBufferT *> m_CommandBuffers;
         std::vector<FenceT *> m_Fences;
 
@@ -139,6 +153,8 @@ namespace glal::vulkan
         void *Map() override;
         void Unmap() override;
 
+        [[nodiscard]] VkBuffer GetHandle() const;
+
     private:
         DeviceT *m_Device;
 
@@ -152,7 +168,10 @@ namespace glal::vulkan
     class ImageT final : public glal::ImageT
     {
     public:
+        explicit ImageT(VkImage handle, const ImageDesc &desc);
         explicit ImageT(DeviceT *device, const ImageDesc &desc);
+
+        ~ImageT() override;
 
         [[nodiscard]] ImageFormat GetFormat() const override;
         [[nodiscard]] ImageType GetType() const override;
@@ -160,7 +179,7 @@ namespace glal::vulkan
         [[nodiscard]] std::uint32_t GetMipLevelCount() const override;
         [[nodiscard]] std::uint32_t GetArrayLayerCount() const override;
 
-        VkImage GetHandle() const;
+        [[nodiscard]] VkImage GetHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -183,6 +202,8 @@ namespace glal::vulkan
         [[nodiscard]] ImageFormat GetFormat() const override;
         [[nodiscard]] ImageType GetType() const override;
 
+        [[nodiscard]] VkImageView GetHandle() const;
+
     private:
         DeviceT *m_Device;
         ImageT *m_Image;
@@ -198,6 +219,8 @@ namespace glal::vulkan
     public:
         explicit SamplerT(DeviceT *device, const SamplerDesc &desc);
 
+        [[nodiscard]] VkSampler GetHandle() const;
+
     private:
         DeviceT *m_Device;
 
@@ -212,7 +235,7 @@ namespace glal::vulkan
 
         [[nodiscard]] ShaderStage GetStage() const override;
 
-        VkShaderModule GetHandle() const;
+        [[nodiscard]] VkShaderModule GetHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -227,13 +250,14 @@ namespace glal::vulkan
     public:
         explicit PipelineLayoutT(DeviceT *device, const PipelineLayoutDesc &desc);
 
-        [[nodiscard]] DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const override;
         [[nodiscard]] std::uint32_t GetDescriptorSetLayoutCount() const override;
+        [[nodiscard]] DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const override;
 
-        VkPipelineLayout GetHandle() const;
+        [[nodiscard]] VkPipelineLayout GetHandle() const;
 
     private:
         DeviceT *m_Device;
+        std::vector<DescriptorSetLayout> m_DescriptorSetLayouts;
 
         VkPipelineLayout m_Handle;
     };
@@ -247,7 +271,7 @@ namespace glal::vulkan
         [[nodiscard]] PipelineType GetType() const override;
         [[nodiscard]] PrimitiveTopology GetTopology() const override;
 
-        VkPipeline GetHandle() const;
+        [[nodiscard]] VkPipeline GetHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -267,15 +291,24 @@ namespace glal::vulkan
 
         [[nodiscard]] std::uint32_t GetDescriptorBindingCount() const override;
         [[nodiscard]] const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const override;
+        [[nodiscard]] const DescriptorBinding *FindDescriptorBinding(std::uint32_t binding) const override;
+
+        [[nodiscard]] VkDescriptorSetLayout GetHandle() const;
 
     private:
         DeviceT *m_Device;
+
+        std::uint32_t m_Set;
+        std::vector<DescriptorBinding> m_DescriptorBindings;
+
+        VkDescriptorSetLayout m_Handle;
     };
 
     class DescriptorSetT final : public glal::DescriptorSetT
     {
     public:
         explicit DescriptorSetT(DeviceT *device, const DescriptorSetDesc &desc);
+        ~DescriptorSetT() override;
 
         void BindBuffer(std::uint32_t binding, Buffer buffer) override;
         void BindBuffer(
@@ -289,8 +322,22 @@ namespace glal::vulkan
             ImageView image_view,
             Sampler sampler) override;
 
+        void Bind() const;
+
     private:
         DeviceT *m_Device;
+        DescriptorSetLayoutT *m_Layout;
+
+        std::vector<VkWriteDescriptorSet> m_WriteDescriptorSets;
+
+        VkDescriptorSet m_Handle;
+        VkDescriptorPool m_PoolHandle;
+    };
+
+    struct Frame
+    {
+        Image Resource;
+        ImageView View;
     };
 
     class SwapchainT final : public glal::SwapchainT
@@ -309,6 +356,48 @@ namespace glal::vulkan
 
     private:
         DeviceT *m_Device;
+
+        std::vector<Frame> m_Frames;
+        Extent2D m_Extent;
+
+        VkSwapchainKHR m_Handle;
+        VkSurfaceKHR m_Surface;
+    };
+
+    class RenderPassT final : public glal::RenderPassT
+    {
+    public:
+        explicit RenderPassT(DeviceT *device, const RenderPassDesc &desc);
+
+        [[nodiscard]] std::uint32_t GetAttachmentCount() const override;
+        [[nodiscard]] const Attachment &GetAttachment(std::uint32_t index) const override;
+
+        [[nodiscard]] VkRenderPass GetHandle() const;
+
+    private:
+        DeviceT *m_Device;
+
+        std::vector<Attachment> m_Attachments;
+
+        VkRenderPass m_Handle;
+    };
+
+    class FramebufferT final : public glal::FramebufferT
+    {
+    public:
+        explicit FramebufferT(DeviceT *device, const FramebufferDesc &desc);
+
+        [[nodiscard]] std::uint32_t GetAttachmentCount() const override;
+        [[nodiscard]] ImageView GetAttachment(std::uint32_t index) const override;
+
+        [[nodiscard]] VkFramebuffer GetHandle() const;
+
+    private:
+        DeviceT *m_Device;
+
+        std::vector<ImageView> m_Attachments;
+
+        VkFramebuffer m_Handle;
     };
 
     class CommandBufferT final : public glal::CommandBufferT
@@ -320,7 +409,7 @@ namespace glal::vulkan
         void Begin() override;
         void End() override;
 
-        void BeginRenderPass(const RenderPassDesc &desc) override;
+        void BeginRenderPass(RenderPass render_pass, Framebuffer framebuffer) override;
         void EndRenderPass() override;
 
         void SetViewport(float x, float y, float width, float height, float min_depth, float max_depth) override;
@@ -389,5 +478,7 @@ namespace glal::vulkan
     VkPipelineBindPoint ToVkPipelineBindPoint(PipelineType pipeline_type);
     VkShaderStageFlagBits ToVkShaderStage(ShaderStage shader_stage);
     VkFormat ToVkFormat(DataType data_type, std::uint32_t count);
+    VkFormat ToVkFormat(ImageFormat image_format);
     VkPrimitiveTopology ToVkPrimitiveTopology(PrimitiveTopology primitive_topology);
+    VkDescriptorType ToVkDescriptorType(DescriptorType descriptor_type);
 }

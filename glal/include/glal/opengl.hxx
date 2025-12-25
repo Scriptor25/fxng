@@ -45,6 +45,8 @@ namespace glal::opengl
         Device CreateDevice() override;
         void DestroyDevice(Device device) override;
 
+        [[nodiscard]] Instance GetInstance() const override;
+
         [[nodiscard]] bool Supports(DeviceFeature feature) const override;
         [[nodiscard]] const DeviceLimits &GetLimits() const override;
 
@@ -60,6 +62,8 @@ namespace glal::opengl
     public:
         explicit DeviceT(PhysicalDeviceT *physical_device);
         ~DeviceT() override;
+
+        PhysicalDeviceT *GetPhysicalDevice() const override;
 
         Buffer CreateBuffer(const BufferDesc &desc) override;
         void DestroyBuffer(Buffer buffer) override;
@@ -91,6 +95,12 @@ namespace glal::opengl
         Swapchain CreateSwapchain(const SwapchainDesc &desc) override;
         void DestroySwapchain(Swapchain swapchain) override;
 
+        RenderPass CreateRenderPass(const RenderPassDesc &desc) override;
+        void DestroyRenderPass(RenderPass render_pass) override;
+
+        Framebuffer CreateFramebuffer(const FramebufferDesc &desc) override;
+        void DestroyFramebuffer(Framebuffer framebuffer) override;
+
         CommandBuffer CreateCommandBuffer(CommandBufferUsage usage) override;
         void DestroyCommandBuffer(CommandBuffer command_buffer) override;
 
@@ -115,6 +125,8 @@ namespace glal::opengl
         std::vector<DescriptorSetLayoutT *> m_DescriptorSetLayouts;
         std::vector<DescriptorSetT *> m_DescriptorSets;
         std::vector<SwapchainT *> m_Swapchains;
+        std::vector<RenderPassT *> m_RenderPasses;
+        std::vector<FramebufferT *> m_Framebuffers;
         std::vector<CommandBufferT *> m_CommandBuffers;
         std::vector<FenceT *> m_Fences;
 
@@ -144,9 +156,7 @@ namespace glal::opengl
         [[nodiscard]] std::uint32_t GetSet() const override;
         [[nodiscard]] std::uint32_t GetDescriptorBindingCount() const override;
         [[nodiscard]] const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const override;
-
-        [[nodiscard]] std::vector<DescriptorBinding>::const_iterator begin() const;
-        [[nodiscard]] std::vector<DescriptorBinding>::const_iterator end() const;
+        [[nodiscard]] const DescriptorBinding *FindDescriptorBinding(std::uint32_t binding) const override;
 
     private:
         DeviceT *m_Device;
@@ -159,7 +169,6 @@ namespace glal::opengl
     {
         GLenum Target;
         BufferT *BufferImpl;
-        bool Base;
         GLsizeiptr Offset;
         GLintptr Size;
     };
@@ -190,14 +199,46 @@ namespace glal::opengl
             ImageView image_view,
             Sampler sampler) override;
 
-        void Bind(std::uint32_t index) const;
+        void Bind(std::uint32_t set) const;
 
     private:
         DeviceT *m_Device;
-        std::vector<DescriptorSetLayoutT *> m_Layouts;
+        DescriptorSetLayout m_Layout;
 
         std::unordered_map<GLuint, BufferBinding> m_BufferBindings;
         std::unordered_map<GLuint, ImageBinding> m_ImageBindings;
+    };
+
+    class RenderPassT final : public glal::RenderPassT
+    {
+    public:
+        explicit RenderPassT(DeviceT *device, const RenderPassDesc &desc);
+
+        [[nodiscard]] std::uint32_t GetAttachmentCount() const override;
+        [[nodiscard]] const Attachment &GetAttachment(std::uint32_t index) const override;
+
+    private:
+        DeviceT *m_Device;
+
+        std::vector<Attachment> m_Attachments;
+    };
+
+    class FramebufferT final : public glal::FramebufferT
+    {
+    public:
+        explicit FramebufferT(DeviceT *device, const FramebufferDesc &desc);
+
+        [[nodiscard]] std::uint32_t GetAttachmentCount() const override;
+        [[nodiscard]] ImageView GetAttachment(std::uint32_t index) const override;
+
+        [[nodiscard]] GLuint GetHandle() const;
+
+    private:
+        DeviceT *m_Device;
+
+        std::vector<ImageView> m_Attachments;
+
+        GLuint m_Handle;
     };
 
     class CommandBufferT final : public glal::CommandBufferT
@@ -208,7 +249,7 @@ namespace glal::opengl
         void Begin() override;
         void End() override;
 
-        void BeginRenderPass(const RenderPassDesc &desc) override;
+        void BeginRenderPass(RenderPass render_pass, Framebuffer framebuffer) override;
         void EndRenderPass() override;
 
         void SetViewport(float x, float y, float width, float height, float min_depth, float max_depth) override;
@@ -242,9 +283,10 @@ namespace glal::opengl
         CommandBufferUsage m_Usage;
 
         PipelineT *m_Pipeline;
+        RenderPassT *m_RenderPass;
+        FramebufferT *m_Framebuffer;
 
-        std::uint32_t m_VertexArray;
-        std::uint32_t m_Framebuffer;
+        GLuint m_VertexArray;
 
         DataType m_IndexType;
     };
@@ -274,7 +316,7 @@ namespace glal::opengl
         void *Map() override;
         void Unmap() override;
 
-        [[nodiscard]] std::uint32_t GetHandle() const;
+        [[nodiscard]] GLuint GetHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -283,7 +325,7 @@ namespace glal::opengl
         BufferUsage m_Usage;
         MemoryUsage m_Memory;
 
-        std::uint32_t m_Handle;
+        GLuint m_Handle;
     };
 
     class ImageT final : public glal::ImageT
@@ -298,7 +340,7 @@ namespace glal::opengl
         [[nodiscard]] std::uint32_t GetMipLevelCount() const override;
         [[nodiscard]] std::uint32_t GetArrayLayerCount() const override;
 
-        [[nodiscard]] std::uint32_t GetHandle() const;
+        [[nodiscard]] GLuint GetHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -309,7 +351,7 @@ namespace glal::opengl
         std::uint32_t m_MipLevelCount;
         std::uint32_t m_ArrayLayerCount;
 
-        std::uint32_t m_Handle;
+        GLuint m_Handle;
     };
 
     class ImageViewT final : public glal::ImageViewT
@@ -321,7 +363,7 @@ namespace glal::opengl
         [[nodiscard]] ImageFormat GetFormat() const override;
         [[nodiscard]] ImageType GetType() const override;
 
-        [[nodiscard]] std::uint32_t GetImageHandle() const;
+        [[nodiscard]] GLuint GetImageHandle() const;
 
     private:
         DeviceT *m_Device;
@@ -337,12 +379,12 @@ namespace glal::opengl
         explicit SamplerT(DeviceT *device, const SamplerDesc &desc);
         ~SamplerT() override;
 
-        [[nodiscard]] std::uint32_t GetHandle() const;
+        [[nodiscard]] GLuint GetHandle() const;
 
     private:
         DeviceT *m_Device;
 
-        std::uint32_t m_Handle;
+        GLuint m_Handle;
     };
 
     class SwapchainT final : public glal::SwapchainT
@@ -384,14 +426,14 @@ namespace glal::opengl
 
         [[nodiscard]] ShaderStage GetStage() const override;
 
-        [[nodiscard]] std::uint32_t GetHandle() const;
+        [[nodiscard]] GLuint GetHandle() const;
 
     private:
         DeviceT *m_Device;
 
         ShaderStage m_Stage;
 
-        std::uint32_t m_Handle;
+        GLuint m_Handle;
     };
 
     class PipelineLayoutT final : public glal::PipelineLayoutT
@@ -399,16 +441,13 @@ namespace glal::opengl
     public:
         explicit PipelineLayoutT(DeviceT *device, const PipelineLayoutDesc &desc);
 
-        [[nodiscard]] DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const override;
         [[nodiscard]] std::uint32_t GetDescriptorSetLayoutCount() const override;
-
-        [[nodiscard]] std::vector<DescriptorSetLayoutT *>::const_iterator begin() const;
-        [[nodiscard]] std::vector<DescriptorSetLayoutT *>::const_iterator end() const;
+        [[nodiscard]] DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const override;
 
     private:
         DeviceT *m_Device;
 
-        std::vector<DescriptorSetLayoutT *> m_DescriptorSetLayouts;
+        std::vector<DescriptorSetLayout> m_DescriptorSetLayouts;
     };
 
     class PipelineT final : public glal::PipelineT
@@ -420,12 +459,12 @@ namespace glal::opengl
         [[nodiscard]] PipelineType GetType() const override;
         [[nodiscard]] PrimitiveTopology GetTopology() const override;
 
-        [[nodiscard]] std::uint32_t GetHandle() const;
+        [[nodiscard]] GLuint GetHandle() const;
 
-        void BindVertexArray(std::uint32_t vertex_array) const;
+        void BindVertexArray(GLuint vertex_array) const;
         void BindVertexBuffer(
-            std::uint32_t vertex_array,
-            std::uint32_t buffer,
+            GLuint vertex_array,
+            GLuint buffer,
             std::uint32_t binding,
             std::uint32_t offset) const;
 
@@ -438,7 +477,7 @@ namespace glal::opengl
         std::vector<VertexBinding> m_VertexBindings;
         std::vector<VertexAttribute> m_VertexAttributes;
 
-        std::uint32_t m_Handle;
+        GLuint m_Handle;
     };
 
     void TranslateImageFormat(

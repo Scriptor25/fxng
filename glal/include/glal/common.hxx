@@ -11,9 +11,38 @@ namespace glal
      */
     union ClearValue
     {
-        float Color[4];
-        float Depth;
-        int Stencil;
+        union
+        {
+            float Float[4];
+            std::int32_t Int[4];
+            std::uint32_t UInt[4];
+        } Color;
+
+        struct
+        {
+            float Depth;
+            std::uint32_t Stencil;
+        } DepthStencil;
+    };
+
+    enum ClearValueMask : std::uint32_t
+    {
+        ClearValueMask_Color_Float,
+        ClearValueMask_Color_Int,
+        ClearValueMask_Color_UInt,
+        ClearValueMask_DepthStencil,
+    };
+
+    /**
+     * Attachment - describes an attachment to a specified target type
+     */
+    struct Attachment
+    {
+        AttachmentType Type;
+
+        bool Clear;
+        ClearValueMask Mask;
+        ClearValue Value;
     };
 
     /**
@@ -62,18 +91,7 @@ namespace glal
     struct PipelineStage
     {
         ShaderStage Stage;
-        ShaderModuleT *Module;
-    };
-
-    /**
-     * Render Target - describes an image view as a render target
-     */
-    struct RenderTarget
-    {
-        ImageViewT *View;
-
-        bool Clear;
-        ClearValue Value;
+        ShaderModule Module;
     };
 
     /**

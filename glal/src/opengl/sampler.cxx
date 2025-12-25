@@ -94,7 +94,7 @@ glal::opengl::SamplerT::~SamplerT()
     glDeleteSamplers(1, &m_Handle);
 }
 
-std::uint32_t glal::opengl::SamplerT::GetHandle() const
+GLuint glal::opengl::SamplerT::GetHandle() const
 {
     return m_Handle;
 }

@@ -152,7 +152,9 @@ glal::vulkan::PipelineT::PipelineT(DeviceT *device, const PipelineDesc &desc)
             .pDynamicStates = dynamic_states.data(),
         };
 
-        // TODO
+        auto render_pass_impl = dynamic_cast<RenderPassT *>(desc.Pass);
+
+        // TODO: render pass
         const VkGraphicsPipelineCreateInfo graphics_pipeline_create_info
         {
             .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -168,7 +170,7 @@ glal::vulkan::PipelineT::PipelineT(DeviceT *device, const PipelineDesc &desc)
             .pColorBlendState = &pipeline_color_blend_state_create_info,
             .pDynamicState = &pipeline_dynamic_state_create_info,
             .layout = layout_impl->GetHandle(),
-            .renderPass = {},
+            .renderPass = render_pass_impl->GetHandle(),
             .subpass = 0,
         };
         vkCreateGraphicsPipelines(

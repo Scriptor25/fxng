@@ -24,6 +24,11 @@ glal::opengl::DeviceT::~DeviceT()
     delete m_Queue;
 }
 
+glal::opengl::PhysicalDeviceT *glal::opengl::DeviceT::GetPhysicalDevice() const
+{
+    return m_PhysicalDevice;
+}
+
 glal::Buffer glal::opengl::DeviceT::CreateBuffer(const BufferDesc &desc)
 {
     return m_Buffers.emplace_back(new BufferT(this, desc));
@@ -224,6 +229,46 @@ void glal::opengl::DeviceT::DestroySwapchain(Swapchain swapchain)
     common::Fatal(
         "swapchain {} is not owned by device {}",
         static_cast<const void *>(swapchain),
+        static_cast<const void *>(this));
+}
+
+glal::RenderPass glal::opengl::DeviceT::CreateRenderPass(const RenderPassDesc &desc)
+{
+    return m_RenderPasses.emplace_back(new RenderPassT(this, desc));
+}
+
+void glal::opengl::DeviceT::DestroyRenderPass(RenderPass render_pass)
+{
+    for (auto it = m_RenderPasses.begin(); it != m_RenderPasses.end(); ++it)
+        if (*it == render_pass)
+        {
+            m_RenderPasses.erase(it);
+            delete render_pass;
+            return;
+        }
+    common::Fatal(
+        "render pass {} is not owned by device {}",
+        static_cast<const void *>(render_pass),
+        static_cast<const void *>(this));
+}
+
+glal::Framebuffer glal::opengl::DeviceT::CreateFramebuffer(const FramebufferDesc &desc)
+{
+    return m_Framebuffers.emplace_back(new FramebufferT(this, desc));
+}
+
+void glal::opengl::DeviceT::DestroyFramebuffer(Framebuffer framebuffer)
+{
+    for (auto it = m_Framebuffers.begin(); it != m_Framebuffers.end(); ++it)
+        if (*it == framebuffer)
+        {
+            m_Framebuffers.erase(it);
+            delete framebuffer;
+            return;
+        }
+    common::Fatal(
+        "framebuffer {} is not owned by device {}",
+        static_cast<const void *>(framebuffer),
         static_cast<const void *>(this));
 }
 

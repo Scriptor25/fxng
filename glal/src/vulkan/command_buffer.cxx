@@ -1,11 +1,12 @@
+#include <cstring>
 #include <glal/vulkan.hxx>
 
 glal::vulkan::CommandBufferT::CommandBufferT(DeviceT *device, CommandBufferUsage usage)
     : m_Device(device),
-      m_Handle(),
-      m_PoolHandle()
+      m_PoolHandle(),
+      m_Handle()
 {
-    // TODO
+    // TODO: queue family
     const VkCommandPoolCreateInfo command_pool_create_info
     {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -44,20 +45,35 @@ void glal::vulkan::CommandBufferT::End()
     vkEndCommandBuffer(m_Handle);
 }
 
-void glal::vulkan::CommandBufferT::BeginRenderPass(const RenderPassDesc &desc)
+void glal::vulkan::CommandBufferT::BeginRenderPass(RenderPass render_pass, Framebuffer framebuffer)
 {
-    // TODO
+    const auto render_pass_impl = dynamic_cast<RenderPassT *>(render_pass);
+    const auto framebuffer_impl = dynamic_cast<FramebufferT *>(framebuffer);
+
+    std::vector<VkClearValue> clear_values(render_pass_impl->GetAttachmentCount());
+    for (std::uint32_t i = 0; i < clear_values.size(); ++i)
+    {
+        auto &clear_value = clear_values[i];
+        auto &attachment = render_pass_impl->GetAttachment(i);
+
+        std::memcpy(
+            &clear_value,
+            &attachment.Value,
+            sizeof(attachment.Value));
+    }
+
+    // TODO: render area
     const VkRenderPassBeginInfo render_pass_begin_info
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = {},
-        .framebuffer = {},
+        .renderPass = render_pass_impl->GetHandle(),
+        .framebuffer = framebuffer_impl->GetHandle(),
         .renderArea = {
             .offset = { 0, 0 },
             .extent = { 0, 0 },
         },
-        .clearValueCount = {},
-        .pClearValues = {},
+        .clearValueCount = static_cast<std::uint32_t>(clear_values.size()),
+        .pClearValues = clear_values.data(),
     };
     vkCmdBeginRenderPass(m_Handle, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 }

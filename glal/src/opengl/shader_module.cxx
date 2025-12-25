@@ -45,7 +45,7 @@ glal::ShaderStage glal::opengl::ShaderModuleT::GetStage() const
     return m_Stage;
 }
 
-std::uint32_t glal::opengl::ShaderModuleT::GetHandle() const
+GLuint glal::opengl::ShaderModuleT::GetHandle() const
 {
     return m_Handle;
 }

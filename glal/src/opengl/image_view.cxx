@@ -23,7 +23,7 @@ glal::ImageType glal::opengl::ImageViewT::GetType() const
     return m_Type;
 }
 
-std::uint32_t glal::opengl::ImageViewT::GetImageHandle() const
+GLuint glal::opengl::ImageViewT::GetImageHandle() const
 {
     return m_Image->GetHandle();
 }

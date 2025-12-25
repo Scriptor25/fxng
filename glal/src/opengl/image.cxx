@@ -105,7 +105,7 @@ std::uint32_t glal::opengl::ImageT::GetArrayLayerCount() const
     return m_ArrayLayerCount;
 }
 
-std::uint32_t glal::opengl::ImageT::GetHandle() const
+GLuint glal::opengl::ImageT::GetHandle() const
 {
     return m_Handle;
 }

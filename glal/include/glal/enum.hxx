@@ -44,12 +44,10 @@ namespace glal
     {
         DescriptorType_UniformBuffer,
         DescriptorType_StorageBuffer,
-        DescriptorType_ReadOnlyStorageBuffer,
         DescriptorType_CombinedImageSampler,
         DescriptorType_SampledImage,
         DescriptorType_StorageImage,
         DescriptorType_Sampler,
-        DescriptorType_PushConstant,
     };
 
     enum DeviceFeature
@@ -112,6 +110,15 @@ namespace glal
         QueueType_Compute  = 1 << 1,
         QueueType_Transfer = 1 << 2,
         QueueType_Present  = 1 << 3,
+    };
+
+    enum AttachmentType : std::uint32_t
+    {
+        AttachmentType_None = 0,
+
+        AttachmentType_Color   = 1 << 0,
+        AttachmentType_Depth   = 1 << 1,
+        AttachmentType_Stencil = 1 << 2,
     };
 
     enum ResourceState

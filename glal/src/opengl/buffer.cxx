@@ -64,7 +64,7 @@ void glal::opengl::BufferT::Unmap()
     glUnmapNamedBuffer(m_Handle);
 }
 
-std::uint32_t glal::opengl::BufferT::GetHandle() const
+GLuint glal::opengl::BufferT::GetHandle() const
 {
     return m_Handle;
 }

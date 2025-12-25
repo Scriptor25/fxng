@@ -88,3 +88,8 @@ glal::ImageType glal::vulkan::ImageViewT::GetType() const
 {
     return m_Type;
 }
+
+VkImageView glal::vulkan::ImageViewT::GetHandle() const
+{
+    return m_Handle;
+}

@@ -18,6 +18,7 @@ namespace glal
     class DescriptorSetT;
     class SwapchainT;
     class RenderPassT;
+    class FramebufferT;
     class CommandBufferT;
     class FenceT;
     class QueueT;
@@ -38,6 +39,7 @@ namespace glal
     using DescriptorSet = DescriptorSetT *;
     using Swapchain = SwapchainT *;
     using RenderPass = RenderPassT *;
+    using Framebuffer = FramebufferT *;
     using CommandBuffer = CommandBufferT *;
     using Fence = FenceT *;
     using Queue = QueueT *;

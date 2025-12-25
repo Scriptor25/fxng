@@ -5,10 +5,8 @@ glal::opengl::DescriptorSetLayoutT::DescriptorSetLayoutT(
     const DescriptorSetLayoutDesc &desc)
     : m_Device(device),
       m_Set(desc.Set),
-      m_DescriptorBindings(desc.DescriptorBindingCount)
+      m_DescriptorBindings(desc.DescriptorBindings, desc.DescriptorBindings + desc.DescriptorBindingCount)
 {
-    for (std::uint32_t i = 0; i < desc.DescriptorBindingCount; ++i)
-        m_DescriptorBindings.at(i) = desc.DescriptorBindings[i];
 }
 
 std::uint32_t glal::opengl::DescriptorSetLayoutT::GetSet() const
@@ -22,17 +20,15 @@ const glal::DescriptorBinding &glal::opengl::DescriptorSetLayoutT::GetDescriptor
     return m_DescriptorBindings.at(index);
 }
 
+const glal::DescriptorBinding *glal::opengl::DescriptorSetLayoutT::FindDescriptorBinding(std::uint32_t binding) const
+{
+    for (auto &descriptor_binding : m_DescriptorBindings)
+        if (descriptor_binding.Binding == binding)
+            return &descriptor_binding;
+    return nullptr;
+}
+
 std::uint32_t glal::opengl::DescriptorSetLayoutT::GetDescriptorBindingCount() const
 {
     return m_DescriptorBindings.size();
-}
-
-std::vector<glal::DescriptorBinding>::const_iterator glal::opengl::DescriptorSetLayoutT::begin() const
-{
-    return m_DescriptorBindings.begin();
-}
-
-std::vector<glal::DescriptorBinding>::const_iterator glal::opengl::DescriptorSetLayoutT::end() const
-{
-    return m_DescriptorBindings.end();
 }

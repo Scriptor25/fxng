@@ -28,6 +28,8 @@ namespace glal
         virtual Device CreateDevice() = 0;
         virtual void DestroyDevice(Device device) = 0;
 
+        [[nodiscard]] virtual Instance GetInstance() const = 0;
+
         [[nodiscard]] virtual bool Supports(DeviceFeature feature) const = 0;
         [[nodiscard]] virtual const DeviceLimits &GetLimits() const = 0;
     };
@@ -36,6 +38,8 @@ namespace glal
     {
     public:
         virtual ~DeviceT() = default;
+
+        virtual PhysicalDevice GetPhysicalDevice() const = 0;
 
         virtual Buffer CreateBuffer(const BufferDesc &desc) = 0;
         virtual void DestroyBuffer(Buffer buffer) = 0;
@@ -69,6 +73,9 @@ namespace glal
 
         virtual RenderPass CreateRenderPass(const RenderPassDesc &desc) = 0;
         virtual void DestroyRenderPass(RenderPass render_pass) = 0;
+
+        virtual Framebuffer CreateFramebuffer(const FramebufferDesc &desc) = 0;
+        virtual void DestroyFramebuffer(Framebuffer framebuffer) = 0;
 
         virtual CommandBuffer CreateCommandBuffer(CommandBufferUsage usage) = 0;
         virtual void DestroyCommandBuffer(CommandBuffer command_buffer) = 0;
@@ -129,8 +136,8 @@ namespace glal
     public:
         virtual ~PipelineLayoutT() = default;
 
-        [[nodiscard]] virtual DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const = 0;
         [[nodiscard]] virtual std::uint32_t GetDescriptorSetLayoutCount() const = 0;
+        [[nodiscard]] virtual DescriptorSetLayout GetDescriptorSetLayout(std::uint32_t index) const = 0;
     };
 
     class PipelineT
@@ -171,6 +178,7 @@ namespace glal
         [[nodiscard]] virtual std::uint32_t GetSet() const = 0;
         [[nodiscard]] virtual std::uint32_t GetDescriptorBindingCount() const = 0;
         [[nodiscard]] virtual const DescriptorBinding &GetDescriptorBinding(std::uint32_t index) const = 0;
+        [[nodiscard]] virtual const DescriptorBinding *FindDescriptorBinding(std::uint32_t binding) const = 0;
     };
 
     class DescriptorSetT
@@ -198,6 +206,18 @@ namespace glal
     {
     public:
         virtual ~RenderPassT() = default;
+
+        [[nodiscard]] virtual std::uint32_t GetAttachmentCount() const = 0;
+        [[nodiscard]] virtual const Attachment &GetAttachment(std::uint32_t index) const = 0;
+    };
+
+    class FramebufferT
+    {
+    public:
+        virtual ~FramebufferT() = default;
+
+        [[nodiscard]] virtual std::uint32_t GetAttachmentCount() const = 0;
+        [[nodiscard]] virtual ImageView GetAttachment(std::uint32_t index) const = 0;
     };
 
     class CommandBufferT
@@ -208,7 +228,7 @@ namespace glal
         virtual void Begin() = 0;
         virtual void End() = 0;
 
-        virtual void BeginRenderPass(const RenderPassDesc &desc) = 0;
+        virtual void BeginRenderPass(RenderPass render_pass, Framebuffer framebuffer) = 0;
         virtual void EndRenderPass() = 0;
 
         virtual void SetViewport(float x, float y, float width, float height, float min_depth, float max_depth) = 0;

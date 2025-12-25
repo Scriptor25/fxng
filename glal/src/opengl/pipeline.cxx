@@ -69,7 +69,7 @@ glal::PrimitiveTopology glal::opengl::PipelineT::GetTopology() const
     return m_Topology;
 }
 
-void glal::opengl::PipelineT::BindVertexArray(const std::uint32_t vertex_array) const
+void glal::opengl::PipelineT::BindVertexArray(GLuint vertex_array) const
 {
     for (auto &vertex_attribute : m_VertexAttributes)
     {
@@ -91,8 +91,8 @@ void glal::opengl::PipelineT::BindVertexArray(const std::uint32_t vertex_array) 
 }
 
 void glal::opengl::PipelineT::BindVertexBuffer(
-    const std::uint32_t vertex_array,
-    const std::uint32_t buffer,
+    GLuint vertex_array,
+    GLuint buffer,
     const std::uint32_t binding,
     const std::uint32_t offset) const
 {
@@ -109,7 +109,7 @@ void glal::opengl::PipelineT::BindVertexBuffer(
         }
 }
 
-std::uint32_t glal::opengl::PipelineT::GetHandle() const
+GLuint glal::opengl::PipelineT::GetHandle() const
 {
     return m_Handle;
 }

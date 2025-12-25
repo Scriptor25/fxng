@@ -1,5 +1,16 @@
 #include <glal/vulkan.hxx>
 
+glal::vulkan::ImageT::ImageT(const VkImage handle, const ImageDesc &desc)
+    : m_Device(nullptr),
+      m_Format(desc.Format),
+      m_Type(desc.Type),
+      m_Extent(desc.Extent),
+      m_MipLevelCount(desc.MipLevelCount),
+      m_ArrayLayerCount(desc.ArrayLayerCount),
+      m_Handle(handle)
+{
+}
+
 glal::vulkan::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
     : m_Device(device),
       m_Format(desc.Format),
@@ -52,6 +63,7 @@ glal::vulkan::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
         break;
     }
 
+    // TODO
     const VkImageCreateInfo image_create_info
     {
         .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -60,22 +72,23 @@ glal::vulkan::ImageT::ImageT(DeviceT *device, const ImageDesc &desc)
         .extent = { .width = m_Extent.Width, .height = m_Extent.Height, .depth = m_Extent.Depth },
         .mipLevels = m_MipLevelCount,
         .arrayLayers = m_ArrayLayerCount,
-        // TODO
         .samples = VK_SAMPLE_COUNT_1_BIT,
-        // TODO
         .tiling = VK_IMAGE_TILING_OPTIMAL,
-        // TODO
         .usage = {},
-        // TODO
         .sharingMode = VK_SHARING_MODE_CONCURRENT,
-        // TODO
         .queueFamilyIndexCount = 0,
-        // TODO
         .pQueueFamilyIndices = nullptr,
-        // TODO
         .initialLayout = {},
     };
     vkCreateImage(device->GetHandle(), &image_create_info, nullptr, &m_Handle);
+}
+
+glal::vulkan::ImageT::~ImageT()
+{
+    if (m_Device)
+    {
+        vkDestroyImage(m_Device->GetHandle(), m_Handle, nullptr);
+    }
 }
 
 glal::ImageFormat glal::vulkan::ImageT::GetFormat() const

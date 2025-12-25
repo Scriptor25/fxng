@@ -1,20 +1,48 @@
 #include <common/log.hxx>
 #include <glal/vulkan.hxx>
 
+static constexpr std::array extensions
+{
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+};
+
 glal::vulkan::DeviceT::DeviceT(PhysicalDeviceT *physical_device)
     : m_PhysicalDevice(physical_device),
       m_Handle()
 {
-    // TODO
+    std::uint32_t queue_family_property_count;
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        m_PhysicalDevice->GetHandle(),
+        &queue_family_property_count,
+        nullptr);
+
+    std::vector<VkQueueFamilyProperties> queue_family_properties(queue_family_property_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(
+        m_PhysicalDevice->GetHandle(),
+        &queue_family_property_count,
+        queue_family_properties.data());
+
+    auto queue_priority = 1.f;
+
+    std::vector<VkDeviceQueueCreateInfo> device_queue_create_infos(queue_family_property_count);
+    for (std::uint32_t i = 0; i < queue_family_property_count; ++i)
+        device_queue_create_infos[i] = {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = i,
+            .queueCount = 1,
+            .pQueuePriorities = &queue_priority,
+        };
+
+    // TODO: layers, extensions and queue families
     const VkDeviceCreateInfo device_create_info
     {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .queueCreateInfoCount = 0,
-        .pQueueCreateInfos = nullptr,
+        .queueCreateInfoCount = static_cast<std::uint32_t>(device_queue_create_infos.size()),
+        .pQueueCreateInfos = device_queue_create_infos.data(),
         .enabledLayerCount = 0,
         .ppEnabledLayerNames = nullptr,
-        .enabledExtensionCount = 0,
-        .ppEnabledExtensionNames = nullptr,
+        .enabledExtensionCount = extensions.size(),
+        .ppEnabledExtensionNames = extensions.data(),
         .pEnabledFeatures = nullptr,
     };
 
@@ -34,6 +62,11 @@ glal::vulkan::DeviceT::~DeviceT()
     common::Assert(m_Swapchains.empty(), "not all swapchains were explicitly destroyed");
     common::Assert(m_CommandBuffers.empty(), "not all command buffers were explicitly destroyed");
     common::Assert(m_Fences.empty(), "not all fences were explicitly destroyed");
+}
+
+glal::vulkan::PhysicalDeviceT *glal::vulkan::DeviceT::GetPhysicalDevice() const
+{
+    return m_PhysicalDevice;
 }
 
 glal::Buffer glal::vulkan::DeviceT::CreateBuffer(const BufferDesc &desc)
@@ -236,6 +269,46 @@ void glal::vulkan::DeviceT::DestroySwapchain(Swapchain swapchain)
         static_cast<const void *>(this));
 }
 
+glal::RenderPass glal::vulkan::DeviceT::CreateRenderPass(const RenderPassDesc &desc)
+{
+    return m_RenderPasses.emplace_back(new RenderPassT(this, desc));
+}
+
+void glal::vulkan::DeviceT::DestroyRenderPass(RenderPass render_pass)
+{
+    for (auto it = m_RenderPasses.begin(); it != m_RenderPasses.end(); ++it)
+        if (*it == render_pass)
+        {
+            m_RenderPasses.erase(it);
+            delete render_pass;
+            return;
+        }
+    common::Fatal(
+        "render pass {} is not owned by device {}",
+        static_cast<const void *>(render_pass),
+        static_cast<const void *>(this));
+}
+
+glal::Framebuffer glal::vulkan::DeviceT::CreateFramebuffer(const FramebufferDesc &desc)
+{
+    return m_Framebuffers.emplace_back(new FramebufferT(this, desc));
+}
+
+void glal::vulkan::DeviceT::DestroyFramebuffer(Framebuffer framebuffer)
+{
+    for (auto it = m_Framebuffers.begin(); it != m_Framebuffers.end(); ++it)
+        if (*it == framebuffer)
+        {
+            m_Framebuffers.erase(it);
+            delete framebuffer;
+            return;
+        }
+    common::Fatal(
+        "framebuffer {} is not owned by device {}",
+        static_cast<const void *>(framebuffer),
+        static_cast<const void *>(this));
+}
+
 glal::CommandBuffer glal::vulkan::DeviceT::CreateCommandBuffer(const CommandBufferUsage usage)
 {
     return m_CommandBuffers.emplace_back(new CommandBufferT(this, usage));
@@ -251,7 +324,7 @@ void glal::vulkan::DeviceT::DestroyCommandBuffer(CommandBuffer command_buffer)
             return;
         }
     common::Fatal(
-        "command_buffer {} is not owned by device {}",
+        "command buffer {} is not owned by device {}",
         static_cast<const void *>(command_buffer),
         static_cast<const void *>(this));
 }
@@ -290,11 +363,6 @@ bool glal::vulkan::DeviceT::Supports(const DeviceFeature feature) const
 const glal::DeviceLimits &glal::vulkan::DeviceT::GetLimits() const
 {
     return m_PhysicalDevice->GetLimits();
-}
-
-glal::vulkan::PhysicalDeviceT *glal::vulkan::DeviceT::GetPhysicalDevice() const
-{
-    return m_PhysicalDevice;
 }
 
 VkDevice glal::vulkan::DeviceT::GetHandle() const

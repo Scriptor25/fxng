@@ -25,6 +25,14 @@ namespace glal
         MemoryUsage Memory;
     };
 
+    struct FramebufferDesc
+    {
+        const ImageView *Attachments;
+        std::uint32_t AttachmentCount;
+
+        RenderPass Pass;
+    };
+
     /**
      * Image Descriptor - describes a single image
      */
@@ -99,7 +107,8 @@ namespace glal
         PrimitiveTopology Topology;
         bool PrimitiveRestartEnable;
 
-        PipelineLayoutT *Layout;
+        PipelineLayout Layout;
+        RenderPass Pass;
 
         bool DepthTest;
         bool DepthWrite;
@@ -122,8 +131,7 @@ namespace glal
      */
     struct DescriptorSetDesc
     {
-        const DescriptorSetLayout *DescriptorSetLayouts;
-        std::uint32_t DescriptorSetLayoutCount;
+        DescriptorSetLayout Layout;
     };
 
     /**
@@ -139,17 +147,11 @@ namespace glal
     };
 
     /**
-     * Render Pass Descriptor - describes a render pass with multiple render targets
+     * Render Pass Descriptor - describes a render pass with multiple attachments
      */
     struct RenderPassDesc
     {
-        const RenderTarget *Color;
-        std::uint32_t ColorCount;
-
-        const RenderTarget *Depth;
-        std::uint32_t DepthCount;
-
-        const RenderTarget *Stencil;
-        std::uint32_t StencilCount;
+        const Attachment *Attachments;
+        std::uint32_t AttachmentCount;
     };
 }
